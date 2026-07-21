@@ -12,13 +12,13 @@ I like problems where correctness is non-negotiable: market data, money math, an
 
 ## Professional work
 
-### Control Comercio — retail management SaaS
+### [Control Comercio](https://controlcomercio.com/) — retail management SaaS
 
 `Angular` `Ionic` `.NET 8` `Azure SQL` `SignalR`
 
 Multi-tenant platform where **~4,000 active businesses** run their sales, stock, and electronic invoicing. One Angular + Ionic codebase ships to web, Android, and iOS, backed by a .NET 8 API with background jobs and real-time updates. The integrations are where the real complexity lives: AFIP e-invoicing, MercadoPago QR payments, MercadoLibre / TiendaNube sync, and AI-assisted purchase-invoice ingestion.
 
-### Gestión Cervecera — ERP for breweries and beverage distributors
+### [Gestión Cervecera](https://gestioncervecera.com/) — ERP for breweries and beverage distributors
 
 `.NET 8` `SQL Server` `Vue + Ionic`
 
@@ -44,11 +44,11 @@ Portfolio analysis, decision simulation, and recommendations — with the broker
 
 Voice in, voice out: questions are transcribed (faster-whisper), answered by a local LLM (Ollama), and spoken back (Piper TTS), with vector search over past sessions (ChromaDB). Runs entirely on-device — no data leaves the machine — and degrades gracefully when an ML service is unavailable.
 
-### PetCloud — desktop ERP for a real pet shop
+### [PetCloud](https://pet-cloud-beige.vercel.app/) — commerce platform for a real pet shop
 
 `Electron` `React` `TypeScript` `Supabase`
 
-Internal desktop app running a real business day to day: products, suppliers, purchases, sales, and reports, backed by Postgres with row-level security. Software with actual users — the kind that call when something breaks.
+Internal desktop ERP running a real business day to day — products, suppliers, purchases, sales, and reports, backed by Postgres with row-level security — plus a live public storefront. Software with actual users — the kind that call when something breaks.
 
 > These repositories are currently private — happy to walk through any of them.
 
