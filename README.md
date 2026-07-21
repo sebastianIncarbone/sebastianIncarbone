@@ -55,3 +55,13 @@ Internal desktop app running a real business day to day: products, suppliers, pu
 ## Currently
 
 Building agentic developer workflows: spec-driven development and multi-agent adversarial code review.
+
+## GitHub activity
+
+<picture>
+  <img src="https://github-readme-stats.vercel.app/api?username=sebastianIncarbone&show_icons=true&theme=tokyonight&hide_border=true&count_private=true&include_all_commits=true" alt="GitHub stats" height="170" />
+</picture>
+
+<picture>
+  <img src="https://github-readme-activity-graph.vercel.app/graph?username=sebastianIncarbone&theme=tokyo-night&hide_border=true&area=true" alt="Contribution activity graph" width="100%" />
+</picture>
