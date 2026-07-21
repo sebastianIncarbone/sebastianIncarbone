@@ -52,6 +52,14 @@ Voice in, voice out: questions are transcribed (faster-whisper), answered by a l
 
 > These repositories are currently private — happy to walk through any of them.
 
+## Certifications
+
+Verified [Bloomberg for Education](https://portal.bloombergforeducation.com/) credentials:
+
+- [Bloomberg Market Concepts (BMC)](https://portal.bloombergforeducation.com/certificates/zp1pr8KzzEDrDX177PK55zXP) — 2026
+- [Bloomberg Finance Fundamentals (BFF)](https://portal.bloombergforeducation.com/certificates/8gyMSz3D33wLZbMKy4xpqqdo) — 2026
+- [Bloomberg Spreadsheet Analysis (BQL)](https://portal.bloombergforeducation.com/certificates/CdKBjP4mjECydGpicbT8h8R4) — 2026
+
 ## Currently
 
 Building agentic developer workflows: spec-driven development and multi-agent adversarial code review.
