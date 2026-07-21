@@ -10,7 +10,21 @@ I like problems where correctness is non-negotiable: market data, money math, an
 ![C#](https://img.shields.io/badge/C%23-239120?style=for-the-badge&logo=csharp&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
 
-## Featured projects
+## Professional work
+
+### Control Comercio — retail management SaaS
+
+`Angular` `Ionic` `.NET 8` `Azure SQL` `SignalR`
+
+Multi-tenant platform where **~4,000 active businesses** run their sales, stock, and electronic invoicing. One Angular + Ionic codebase ships to web, Android, and iOS, backed by a .NET 8 API with background jobs and real-time updates. The integrations are where the real complexity lives: AFIP e-invoicing, MercadoPago QR payments, MercadoLibre / TiendaNube sync, and AI-assisted purchase-invoice ingestion.
+
+### Gestión Cervecera — ERP for breweries and beverage distributors
+
+`.NET 8` `SQL Server` `Vue + Ionic`
+
+Commercial ERP covering production, stock, keg and tap tracking, and deliveries with signature-based proof of delivery — for businesses operating in **nine countries**. The hard part: one multi-tenant system honoring each country's fiscal rules (AFIP in Argentina, electronic dispatch guides in Chile, Facturapi in Mexico), plus e-commerce sync with Shopify and WooCommerce.
+
+## Side projects
 
 ### Mercurio — market terminal for Argentine fixed income
 
