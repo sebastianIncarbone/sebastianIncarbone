@@ -59,7 +59,7 @@ Building agentic developer workflows: spec-driven development and multi-agent ad
 ## GitHub activity
 
 <picture>
-  <img src="https://github-readme-stats.vercel.app/api?username=sebastianIncarbone&show_icons=true&theme=tokyonight&hide_border=true&count_private=true&include_all_commits=true" alt="GitHub stats" height="170" />
+  <img src="https://streak-stats.demolab.com/?user=sebastianIncarbone&theme=tokyonight&hide_border=true" alt="GitHub streak stats" height="170" />
 </picture>
 
 <picture>
