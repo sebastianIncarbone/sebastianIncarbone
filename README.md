@@ -24,6 +24,12 @@ Multi-tenant platform where **~4,000 active businesses** run their sales, stock,
 
 Commercial ERP covering production, stock, keg and tap tracking, and deliveries with signature-based proof of delivery — for businesses operating in **nine countries**. The hard part: one multi-tenant system honoring each country's fiscal rules (AFIP in Argentina, electronic dispatch guides in Chile, Facturapi in Mexico), plus e-commerce sync with Shopify and WooCommerce.
 
+### [PetCloud](https://pet-cloud-beige.vercel.app/) — commerce platform for a real pet shop
+
+`Electron` `React` `TypeScript` `Supabase`
+
+Internal desktop ERP running a real business day to day — products, suppliers, purchases, sales, and reports, backed by Postgres with row-level security — plus a live public storefront. Software with actual users — the kind that call when something breaks.
+
 ## Side projects
 
 ### Mercurio — market terminal for Argentine fixed income
@@ -43,12 +49,6 @@ Portfolio analysis, decision simulation, and recommendations — with the broker
 `Python` `FastAPI` `React` `Ollama` `Whisper`
 
 Voice in, voice out: questions are transcribed (faster-whisper), answered by a local LLM (Ollama), and spoken back (Piper TTS), with vector search over past sessions (ChromaDB). Runs entirely on-device — no data leaves the machine — and degrades gracefully when an ML service is unavailable.
-
-### [PetCloud](https://pet-cloud-beige.vercel.app/) — commerce platform for a real pet shop
-
-`Electron` `React` `TypeScript` `Supabase`
-
-Internal desktop ERP running a real business day to day — products, suppliers, purchases, sales, and reports, backed by Postgres with row-level security — plus a live public storefront. Software with actual users — the kind that call when something breaks.
 
 > These repositories are currently private — happy to walk through any of them.
 
