@@ -58,6 +58,8 @@ Building agentic developer workflows: spec-driven development and multi-agent ad
 
 ## GitHub activity
 
+> Most of my day-to-day work lives in private repositories and my employer's Azure DevOps, so it is not reflected in these graphs.
+
 <picture>
   <img src="https://streak-stats.demolab.com/?user=sebastianIncarbone&theme=tokyonight&hide_border=true" alt="GitHub streak stats" height="170" />
 </picture>
