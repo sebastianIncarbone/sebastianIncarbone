@@ -1,1 +1,8 @@
+# Agent tooling and local context — never published on the profile
 .atl/
+.claude/
+.opencode/
+.codex/
+openspec/
+CLAUDE.md
+AGENTS.md
