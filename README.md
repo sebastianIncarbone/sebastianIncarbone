@@ -28,7 +28,7 @@ Commercial ERP covering production, stock, keg and tap tracking, and deliveries 
 
 `Electron` `React` `TypeScript` `Supabase`
 
-Internal desktop ERP running a real business day to day — products, suppliers, purchases, sales, and reports, backed by Postgres with row-level security — plus a live public storefront. Software with actual users — the kind that call when something breaks.
+Two applications over one Postgres with row-level security: an Electron ERP the shop runs day to day — products, suppliers, purchases, sales, reports — and a public storefront where customers follow their own orders. The hard part: an order carries two independent state machines, fulfillment and payment, and they share token names that mean different things — a cancelled payment is not a cancelled order. A single typed boundary parses both raw strings into one order state, nothing downstream accepts a bare status, and that state projects into **13 customer-facing views** collapsed onto a **four-step** tracker. Software with actual users — the kind that call when something breaks.
 
 ## Side projects
 
