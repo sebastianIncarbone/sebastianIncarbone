@@ -32,25 +32,17 @@ Two applications over one Postgres with row-level security: an Electron ERP the 
 
 ## Side projects
 
-### Mercurio — market terminal for Argentine fixed income
+### [Otto](https://github.com/sebastianIncarbone/otto-dictation) — offline dictation for Windows
 
-`Angular` `.NET 8` `Clean Architecture`
+`.NET 10` `Avalonia` `Whisper.net` `Vulkan` `Local LLM`
 
-Read-only market terminal built on a layered .NET 8 backend and a standalone-components Angular frontend. The interesting problem: **reconciling LECAP positions** — capitalization bills accrue daily, so a position's value is something you compute and verify, not a number you store.
+Hold a key, talk, release — the text lands wherever the caret was, in any application, and nothing ever leaves the machine. It exists because Whisper flattens *voseo*: where you say *instalá* it writes *instala*. The hard part is a latency budget — transcription, Rioplatense correction, and text injection all have to fit inside **1.02 s** from releasing the key, and that budget does not grow with how much you dictate, because whisper.cpp processes a fixed **30-second** window either way. Without a GPU the same work runs **17× to 37×** slower, so Otto probes the hardware at startup, downloads a smaller speech model, and never offers the local correction model at all — a 3B model cannot answer inside the budget on CPU, so it does not pretend it can.
 
-### FinancialLurch — personal financial intelligence cockpit
+### [QueLePongo](https://quelepongo.vercel.app) — explained scoring for project names
 
-`Python` `CI + coverage` `Read-only broker`
+`React 19` `TypeScript` `Vite` `Vercel Functions`
 
-Portfolio analysis, decision simulation, and recommendations — with the broker integration read-only **by design**: the system analyzes and proposes, the human decides. Typed Python, CI with enforced coverage, built spec-first with TDD.
-
-### oGoat — local-first voice study assistant
-
-`Python` `FastAPI` `React` `Ollama` `Whisper`
-
-Voice in, voice out: questions are transcribed (faster-whisper), answered by a local LLM (Ollama), and spoken back (Piper TTS), with vector search over past sessions (ChromaDB). Runs entirely on-device — no data leaves the machine — and degrades gracefully when an ML service is unavailable.
-
-> These repositories are currently private — happy to walk through any of them.
+Takes a project name and returns a score across **six weighted axes** — registry availability, domain, search noise, transmissibility, shape, brand identity — on a radar that shows where every point came from. It is not an availability checker: availability is one input, the product is the justification. The hard part is that a source which fails is not a source that says yes, and a network error must never read as *the name is free*. Every check is a three-state value — `ok`, `error`, `skipped` — so there is no boolean to fall onto, and an axis with no evidence leaves the denominator instead of redistributing its weight, because inflating the score would lie about how much was actually measured. Scoring lives as pure functions under test, separate from fetching; the API only fans out and caches raw bundles for **24 hours** at the edge, behind a canonicalizing redirect that stops the **32** case permutations of a five-letter name from shredding that cache and burning GitHub's **30 requests per minute** search quota.
 
 ## Certifications
 
