@@ -26,11 +26,17 @@ Multi-tenant platform where **~4,000 active businesses** run their sales, stock,
 
 Commercial ERP covering production, stock, keg and tap tracking, and deliveries with signature-based proof of delivery — for businesses operating in **nine countries**. The hard part: one multi-tenant system honoring each country's fiscal rules (AFIP in Argentina, electronic dispatch guides in Chile, Facturapi in Mexico), plus e-commerce sync with Shopify and WooCommerce.
 
-### [PetCloud](https://pet-cloud-beige.vercel.app/) — commerce platform for a real pet shop
+### [PetCloud Store](https://petcloud.com.ar) — public storefront for a real pet shop
 
-`Electron` `React` `TypeScript` `Supabase`
+`Next.js 16` `React 19` `TypeScript` `Supabase` `MercadoPago`
 
-Two applications over one Postgres with row-level security: an Electron ERP the shop runs day to day — products, suppliers, purchases, sales, reports — and a public storefront where customers follow their own orders. The hard part: an order carries two independent state machines, fulfillment and payment, and they share token names that mean different things — a cancelled payment is not a cancelled order. A single typed boundary parses both raw strings into one order state, nothing downstream accepts a bare status, and that state projects into **13 customer-facing views** collapsed onto a **four-step** tracker. Software with actual users — the kind that call when something breaks.
+Server-rendered storefront for a working pet shop, on Vercel over the same Postgres the admin writes to — SSR is a requirement, not a preference, because a shop that does not rank on Google does not sell. The hard part is the order: it carries two independent state machines, fulfillment and payment, and they share token names that mean different things — a cancelled payment is not a cancelled order. A single typed boundary parses both raw strings into one order state, nothing downstream accepts a bare status, and that state projects into **13 customer-facing views** collapsed onto a **four-step** public tracker. Checkout runs through MercadoPago, and it is the approved payment — not the click — that turns a stock reservation into a real sale.
+
+### PetCloud ERP — desktop admin behind the same shop
+
+`Electron` `React 19` `PostgreSQL` `Supabase` `MercadoLibre`
+
+The internal half the shop runs day to day: products, variants, suppliers, purchases, sales, orders, and reports. Its governing rule is that business logic lives in Postgres, not in the client — stock, reserved units, weighted average cost, and COGS are computed by triggers and the client is forbidden from sending them, while anti-oversell locks the row `FOR UPDATE` and raises `INSUFFICIENT_STOCK` before it writes. A typechecker cannot see a single line of SQL, so those invariants are covered by a pgTAP suite instead. The sharpest edge is the MercadoLibre sync: its API **deletes any variation missing from a PUT**, so pushing stock means reading the item's full variation array back first and returning it complete — and failing closed on any doubtful value, because sending a `0` for stock you merely could not read would unpublish inventory that actually exists. Software with actual users — the kind that call when something breaks.
 
 ## Side projects
 
