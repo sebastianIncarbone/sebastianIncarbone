@@ -44,11 +44,11 @@ The internal half the shop runs day to day: products, variants, suppliers, purch
 
 `Node 24` `node:sqlite` `React` `Claude Code` `systemd` `GitHub Projects` `Slack`
 
+> 📖 **[Read the full story: the theory, the factory flow, where the human enters and how it improves itself →](https://claude.ai/artifact/Rm6ZK8xyhs2sMj58aa8XxV)** · English / Español
+
 One service on my machine reads each project's GitHub Project board and, for every card I queue, starts a Claude Code session with the harness that card's phase needs. The phases are fixed for every project — define, design, code, test — and each is a chain of stations with gates and a routed exit; a project only configures which skills each phase loads and which review lenses its pull requests get (code and security are mandatory, UI and UX optional). The machine is shared under hard limits: a cap on concurrent sessions, a monthly and daily USD budget per project, and systemd CPU and memory caps on every command a project runs.
 
 **Degree of automation: semi-autonomous — the system proposes, a human approves.** I decide what enters the queue and I merge; definition, design, implementation, tests, multi-lens adversarial review and the pull request run without me, and a person is pulled in only when a gate escalates or an approval is owed, answered from Slack. The factory also improves itself through two separate loops — a retrospective that proposes changes to its own prompts, skills and model routing as a PR backed by a replay comparison, and a "dreaming" pass that proposes memory operations — and neither lands without my approval. Full autonomy is deliberately not the goal: autonomy is granted in proportion to what the gates can verify, and the harness, not the model, is where the reliability lives.
-
-**[Read the full story — the theory, the factory flow, where the human enters and how it improves itself →](mercurio/index.html)**
 
 ### [Otto](https://github.com/sebastianIncarbone/otto-dictation) — offline dictation for Windows
 
