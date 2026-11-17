@@ -1,0 +1,1539 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mercurio</title>
+<meta name="description" content="Mercurio is a local, multi-project software factory: a chain of small Claude Code sessions with gates the service runs, a routed exit, and an owner who stays in control.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=JetBrains+Mono:wght@400;600&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&amp;display=swap">
+<style>
+/* Layout concept: a signalling schematic. A card runs down a line of stations, each guarded by a gate,
+   and ends at a switch that routes it to the QA branch or to a person. Long-form reading column,
+   figures break out wider. Mercury (Hg 80) as the mark. Amber is reserved for the human. */
+:root {
+  --paper: #ecf0ef;
+  --paper-2: #e1e7e6;
+  --sheet: #f8faf9;
+  --ink: #14202a;
+  --ink-2: #4a5965;
+  --ink-3: #6f7d88;
+  --rule: #c3ccd0;
+  --mercury: #24677f;
+  --mercury-soft: #d2e3e9;
+  --owner: #a85a08;
+  --owner-soft: #f5e2c6;
+  --go: #2c7a4b;
+  --stop: #b03a2d;
+  --font-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Source Serif 4", "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --step--1: 0.8125rem;
+  --step-0: 1.0625rem;
+  --step-1: 1.25rem;
+  --step-2: 1.625rem;
+  --step-3: clamp(1.9rem, 1.4rem + 2vw, 2.6rem);
+  --step-4: clamp(2.5rem, 1.6rem + 4.2vw, 4.6rem);
+  --measure: 66ch;
+  --wide: 1180px;
+  --radius: 10px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0e1419; --paper-2: #141c23; --sheet: #18222a;
+    --ink: #dce5ea; --ink-2: #9aa9b4; --ink-3: #75848f; --rule: #2a3843;
+    --mercury: #7fbcd6; --mercury-soft: #19323f;
+    --owner: #f2a547; --owner-soft: #3a2a15;
+    --go: #6cc48f; --stop: #f07b6b;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0e1419; --paper-2: #141c23; --sheet: #18222a;
+  --ink: #dce5ea; --ink-2: #9aa9b4; --ink-3: #75848f; --rule: #2a3843;
+  --mercury: #7fbcd6; --mercury-soft: #19323f;
+  --owner: #f2a547; --owner-soft: #3a2a15;
+  --go: #6cc48f; --stop: #f07b6b;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; scroll-padding-top: 72px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--step-0);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
+img, svg { max-width: 100%; }
+a { color: var(--mercury); text-underline-offset: 0.18em; text-decoration-thickness: 1px; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 2px solid var(--mercury); outline-offset: 3px; border-radius: 4px; }
+code, .mono { font-family: var(--font-mono); font-size: 0.86em; }
+code { background: var(--paper-2); padding: 0.08em 0.35em; border-radius: 4px; }
+h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.12; text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+p { margin: 0; }
+.wrap {
+  max-width: var(--wide);
+  margin-inline: auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.prose { max-width: var(--measure); display: grid; gap: 1em; }
+.eyebrow {
+  font-family: var(--font-mono); font-size: var(--step--1); letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink-3); display: flex; align-items: center; gap: 0.6em;
+}
+.eyebrow b { color: var(--mercury); font-weight: 600; }
+.cite { font-family: var(--font-mono); font-size: 0.72em; white-space: nowrap; }
+.cite a { text-decoration: none; border-bottom: 1px solid var(--rule); color: var(--ink-2); }
+.cite a:hover { color: var(--mercury); border-color: var(--mercury); }
+.infer {
+  font-family: var(--font-mono); font-size: 0.7em; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--ink-2); border: 1px dashed var(--ink-3); border-radius: 4px; padding: 0.05em 0.4em; white-space: nowrap;
+}
+.muted { color: var(--ink-2); }
+.skip { position: absolute; left: -999px; top: 8px; background: var(--ink); color: var(--paper); padding: 8px 12px; z-index: 30; }
+.skip:focus { left: 16px; }
+
+/* Header */
+.top {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--rule);
+}
+.top .wrap { display: flex; align-items: center; gap: 16px; padding-block: 10px; }
+.mark { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); flex: none; }
+.hg {
+  width: 38px; height: 38px; border: 1.5px solid var(--ink); border-radius: 6px; position: relative;
+  font-family: var(--font-display); font-weight: 700; display: grid; place-items: center; font-size: 16px; line-height: 1;
+}
+.hg::before { content: "80"; position: absolute; top: 3px; left: 4px; font-family: var(--font-mono); font-size: 8px; font-weight: 400; }
+.mark span:last-child { font-family: var(--font-display); font-weight: 650; font-size: 1.1rem; letter-spacing: 0.01em; }
+.nav { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; flex: 1; min-width: 0; justify-content: flex-end; }
+.nav::-webkit-scrollbar { display: none; }
+.nav a {
+  font-family: var(--font-mono); font-size: 12px; color: var(--ink-2); text-decoration: none; padding: 6px 8px; border-radius: 6px; white-space: nowrap;
+}
+.nav a:hover, .nav a[aria-current="true"] { color: var(--ink); background: var(--paper-2); }
+.theme-btn {
+  flex: none; border: 1px solid var(--rule); background: var(--sheet); color: var(--ink); border-radius: 999px;
+  height: 34px; padding: 0 12px; font-family: var(--font-mono); font-size: 12px; cursor: pointer; display: flex; gap: 6px; align-items: center;
+}
+.theme-btn:hover { border-color: var(--ink-3); }
+.theme-btn svg { width: 14px; height: 14px; }
+@media (max-width: 760px) { .nav { display: none; } .top .wrap { justify-content: space-between; } }
+
+/* Sections */
+section { padding-block: clamp(56px, 8vw, 104px); border-top: 1px solid var(--rule); }
+section.hero { border-top: 0; padding-block: clamp(40px, 7vw, 88px) clamp(40px, 6vw, 72px); }
+.sec-head { display: grid; gap: 14px; margin-bottom: clamp(28px, 4vw, 44px); max-width: 60rem; }
+.sec-head h2 { font-size: var(--step-3); font-weight: 700; }
+.sec-head .lede { font-size: var(--step-1); color: var(--ink-2); max-width: 46rem; line-height: 1.5; }
+
+/* Hero */
+.hero-grid { display: grid; gap: clamp(28px, 4vw, 48px); }
+.hero h1 { font-size: var(--step-4); font-weight: 760; letter-spacing: -0.025em; line-height: 1.02; max-width: 15ch; }
+.hero h1 em { font-style: normal; color: var(--mercury); }
+.hero h1 .dim { color: var(--ink-3); font-weight: 500; }
+.hero-copy { display: grid; gap: 18px; max-width: 44rem; }
+.hero-copy .what { font-size: var(--step-1); line-height: 1.5; }
+.auto-line {
+  display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: baseline; font-size: var(--step-0);
+  border-left: 3px solid var(--owner); padding: 4px 0 4px 14px; color: var(--ink-2);
+}
+.auto-line strong { color: var(--ink); font-family: var(--font-display); font-weight: 650; }
+.facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--ink); border-bottom: 1px solid var(--rule); }
+.facts div { padding: 14px 14px 14px 0; display: grid; gap: 2px; }
+.facts div + div { padding-left: 14px; border-left: 1px solid var(--rule); }
+.facts b { font-family: var(--font-display); font-size: var(--step-2); font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.facts span { font-size: var(--step--1); color: var(--ink-2); font-family: var(--font-mono); line-height: 1.35; }
+@media (max-width: 640px) {
+  .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .facts div:nth-child(3) { padding-left: 0; border-left: 0; }
+  .facts div:nth-child(n+3) { border-top: 1px solid var(--rule); }
+}
+
+/* Figures */
+figure { margin: 0; display: grid; gap: 12px; min-width: 0; }
+figcaption { font-size: var(--step--1); color: var(--ink-2); font-family: var(--font-mono); line-height: 1.5; max-width: 72ch; }
+.scroller { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: var(--radius); }
+.scroller > svg { display: block; width: 100%; height: auto; }
+.scroller.min-640 > svg { min-width: 640px; }
+.scroller.min-760 > svg { min-width: 760px; }
+.scroll-hint { display: none; font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); }
+@media (max-width: 760px) { .scroll-hint { display: block; } }
+.panel { background: var(--sheet); border: 1px solid var(--rule); border-radius: var(--radius); }
+
+svg text { font-family: var(--font-mono); fill: currentColor; }
+svg .t-name { font-family: var(--font-display); font-weight: 650; font-size: 15px; }
+svg .t-sm { font-size: 11px; }
+svg .t-xs { font-size: 10px; letter-spacing: 0.06em; }
+svg .ink2 { fill: var(--ink-2); }
+svg .ink3 { fill: var(--ink-3); }
+svg .line { stroke: var(--ink-2); stroke-width: 1.5; fill: none; }
+svg .track { stroke: var(--ink); stroke-width: 2.5; fill: none; }
+svg .gate { fill: var(--paper); stroke: var(--ink); stroke-width: 1.5; }
+svg .gate-fill { fill: var(--mercury); stroke: none; }
+svg .owner-fill { fill: var(--owner); }
+svg .owner-stroke { stroke: var(--owner); }
+svg .owner-text { fill: var(--owner); }
+svg .band { fill: var(--paper-2); stroke: none; }
+svg .node { fill: var(--sheet); stroke: var(--ink); stroke-width: 1.5; }
+svg .node-owner { fill: var(--owner-soft); stroke: var(--owner); stroke-width: 1.5; }
+svg .node-merc { fill: var(--mercury-soft); stroke: var(--mercury); stroke-width: 1.5; }
+svg .dash { stroke-dasharray: 5 5; }
+svg .stop-fill { fill: var(--stop); }
+svg .merc-fill { fill: var(--mercury); }
+svg .merc-stroke { stroke: var(--mercury); }
+svg .arrowhead { fill: var(--ink-2); }
+
+/* Problem */
+.two-col { display: grid; gap: clamp(28px, 4vw, 56px); grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+@media (max-width: 900px) { .two-col { grid-template-columns: minmax(0, 1fr); } }
+.stat-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--rule); }
+.stat-row > div { padding: 16px 16px 16px 0; display: grid; gap: 6px; align-content: start; }
+.stat-row > div + div { padding-left: 16px; border-left: 1px solid var(--rule); }
+.stat-row b { font-family: var(--font-display); font-size: var(--step-3); line-height: 1; font-variant-numeric: tabular-nums; }
+.stat-row p { font-size: 0.92rem; color: var(--ink-2); line-height: 1.45; }
+@media (max-width: 640px) {
+  .stat-row { grid-template-columns: minmax(0, 1fr); }
+  .stat-row > div + div { padding-left: 0; border-left: 0; border-top: 1px solid var(--rule); }
+}
+.callout {
+  border: 1px solid var(--rule); border-radius: var(--radius); padding: 18px 20px; background: var(--sheet);
+  display: grid; gap: 8px; font-size: 0.96rem;
+}
+.callout h3 { font-size: var(--step-0); font-weight: 650; }
+.callout.owner { border-color: var(--owner); background: var(--owner-soft); }
+blockquote { margin: 0; }
+.pull {
+  font-family: var(--font-display); font-weight: 500; font-size: var(--step-2); line-height: 1.22; letter-spacing: -0.01em;
+  padding-left: 18px; border-left: 3px solid var(--mercury);
+}
+.pull footer { font-family: var(--font-mono); font-size: var(--step--1); color: var(--ink-2); margin-top: 10px; letter-spacing: 0; }
+
+/* Principles */
+.principles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; border-top: 2px solid var(--ink); }
+.principle { padding: 28px 28px 30px 0; display: grid; gap: 14px; align-content: start; border-bottom: 1px solid var(--rule); }
+.principle:nth-child(even) { padding-left: 28px; padding-right: 0; border-left: 1px solid var(--rule); }
+.principle .num { font-family: var(--font-mono); font-size: var(--step--1); color: var(--mercury); }
+.principle h3 { font-size: var(--step-2); font-weight: 700; }
+.principle q { font-family: var(--font-body); font-style: italic; font-size: 1.12rem; line-height: 1.5; quotes: "\201C" "\201D"; display: block; }
+.principle .applies { font-size: 0.95rem; color: var(--ink-2); border-top: 1px dashed var(--rule); padding-top: 12px; }
+.principle .applies strong { color: var(--ink); font-family: var(--font-display); font-weight: 650; }
+@media (max-width: 800px) {
+  .principles { grid-template-columns: minmax(0, 1fr); }
+  .principle, .principle:nth-child(even) { padding: 24px 0; border-left: 0; }
+}
+
+/* Factory flow */
+.flow-fig { display: grid; gap: 16px; }
+.flow-svg .st { cursor: pointer; }
+.flow-svg .st rect { transition: fill .2s, stroke .2s; }
+.flow-svg .st:hover rect.node, .flow-svg .st:focus-visible rect.node { fill: var(--mercury-soft); }
+.flow-svg .st[aria-pressed="true"] rect.node { fill: var(--mercury); stroke: var(--mercury); }
+.flow-svg .st[aria-pressed="true"] text { fill: var(--paper); }
+.flow-svg .st:focus { outline: none; }
+.flow-svg .st:focus-visible rect.node { stroke-width: 3; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  font-family: var(--font-mono); font-size: 13px; border: 1px solid var(--rule); background: var(--sheet); color: var(--ink);
+  border-radius: 999px; padding: 6px 12px; cursor: pointer; display: inline-flex; gap: 8px; align-items: center;
+}
+.chip small { color: var(--ink-3); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+.chip:hover { border-color: var(--ink-3); }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.chip[aria-pressed="true"] small { color: var(--paper-2); }
+.detail { padding: clamp(18px, 3vw, 28px); display: grid; gap: 18px; }
+.detail-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px; }
+.detail-head h3 { font-size: var(--step-2); font-weight: 700; }
+.detail-head .tag { font-family: var(--font-mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--mercury); }
+.detail-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--rule); }
+.detail-grid > div { padding: 14px 16px 0 0; display: grid; gap: 6px; align-content: start; min-width: 0; }
+.detail-grid > div + div { padding-left: 16px; border-left: 1px solid var(--rule); }
+.detail-grid h4 { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3); font-weight: 400; }
+.detail-grid p { font-size: 0.95rem; line-height: 1.5; }
+.detail-grid .fail h4 { color: var(--stop); }
+.detail-grid .auth.is-owner h4 { color: var(--owner); }
+.detail .io { font-family: var(--font-mono); font-size: 13px; color: var(--ink-2); display: flex; flex-wrap: wrap; gap: 6px 18px; }
+.detail .io b { color: var(--ink); font-weight: 600; }
+@media (max-width: 760px) {
+  .detail-grid { grid-template-columns: minmax(0, 1fr); }
+  .detail-grid > div + div { padding-left: 0; border-left: 0; border-top: 1px solid var(--rule); padding-top: 14px; }
+  .detail-grid > div { padding-right: 0; padding-bottom: 4px; }
+}
+.retry { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin-top: 8px; }
+.retry > div { position: relative; padding: 16px 22px 16px 16px; border: 1px solid var(--rule); background: var(--sheet); display: grid; gap: 6px; align-content: start; }
+.retry > div + div { border-left: 0; }
+.retry > div:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+.retry > div:last-child { border-radius: 0 var(--radius) var(--radius) 0; }
+.retry > div:not(:last-child)::after {
+  content: ""; position: absolute; right: -8px; top: 50%; width: 14px; height: 14px; background: var(--sheet);
+  border-top: 1px solid var(--rule); border-right: 1px solid var(--rule); transform: translateY(-50%) rotate(45deg); z-index: 1;
+}
+.retry .k { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-3); }
+.retry .k.stop { color: var(--stop); }
+.retry .k.own { color: var(--owner); }
+.retry p { font-size: 0.93rem; line-height: 1.45; }
+@media (max-width: 860px) {
+  .retry { grid-template-columns: minmax(0, 1fr); }
+  .retry > div + div { border-left: 1px solid var(--rule); border-top: 0; }
+  .retry > div:first-child { border-radius: var(--radius) var(--radius) 0 0; }
+  .retry > div:last-child { border-radius: 0 0 var(--radius) var(--radius); }
+  .retry > div:not(:last-child)::after { right: auto; left: 24px; top: auto; bottom: -8px; transform: rotate(135deg); }
+}
+table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
+th, td { text-align: left; padding: 10px 14px 10px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-3); font-weight: 400; }
+td { font-variant-numeric: tabular-nums; }
+td.mono, th.mono { font-family: var(--font-mono); font-size: 13px; }
+.table-wrap { overflow-x: auto; }
+.table-wrap table { min-width: 520px; }
+.subhead { font-size: var(--step-1); font-weight: 700; margin-bottom: 6px; }
+.stack { display: grid; gap: clamp(28px, 4vw, 48px); }
+
+/* Human lane */
+.lane-legend { display: flex; flex-wrap: wrap; gap: 8px 22px; font-family: var(--font-mono); font-size: 12px; color: var(--ink-2); margin-bottom: 18px; }
+.lane-legend span { display: inline-flex; align-items: center; gap: 8px; }
+.lane-legend i { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+.lane-legend .lo { background: var(--owner); }
+.lane-legend .lf { background: var(--paper); border: 2px solid var(--ink-2); }
+.lanes { display: grid; gap: 0; }
+.lane-group { font-family: var(--font-mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3); padding: 18px 0 8px; display: grid; grid-template-columns: minmax(0,1fr) 44px minmax(0,1fr); }
+.lane-group span:first-child { text-align: right; }
+.lane-row { display: grid; grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr); align-items: stretch; }
+.lane-row .rail { position: relative; }
+.lane-row .rail::before { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: var(--rule); transform: translateX(-50%); }
+.lane-row .rail::after {
+  content: ""; position: absolute; left: 50%; top: 22px; width: 14px; height: 14px; border-radius: 50%;
+  background: var(--owner); transform: translateX(-50%); box-shadow: 0 0 0 4px var(--paper);
+}
+.lane-row .own { padding: 12px 16px 16px 0; text-align: right; display: grid; gap: 4px; align-content: start; }
+.lane-row .fac { padding: 12px 0 16px 16px; display: grid; gap: 4px; align-content: start; color: var(--ink-2); font-size: 0.95rem; line-height: 1.5; }
+.lane-row .own h3 { font-size: 1.08rem; font-weight: 650; color: var(--ink); }
+.lane-row .own p { font-size: 0.95rem; line-height: 1.5; color: var(--ink-2); }
+.lane-row .meta { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+.pill {
+  font-family: var(--font-mono); font-size: 11px; border-radius: 999px; padding: 2px 9px; border: 1px solid var(--rule); color: var(--ink-2); white-space: nowrap; background: var(--sheet);
+}
+.pill.ch { border-color: var(--owner); color: var(--owner); background: var(--owner-soft); }
+.pill.always { border-color: var(--ink); color: var(--ink); }
+@media (max-width: 720px) {
+  .lane-group { grid-template-columns: 28px minmax(0, 1fr); }
+  .lane-group span:first-child { display: none; }
+  .lane-group span:nth-child(2) { display: none; }
+  .lane-row { grid-template-columns: 28px minmax(0, 1fr); }
+  .lane-row .rail { grid-row: 1 / span 2; }
+  .lane-row .own { text-align: left; padding: 12px 0 4px 12px; }
+  .lane-row .meta { justify-content: flex-start; }
+  .lane-row .fac { grid-column: 2; padding: 0 0 18px 12px; }
+}
+
+/* Maturity ladder */
+.ladder { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; align-items: end; padding-top: 34px; }
+.rung {
+  position: relative; border: 1px solid var(--rule); background: var(--sheet); color: var(--ink); border-radius: 8px 8px 0 0;
+  cursor: pointer; text-align: left; padding: 10px 10px 12px; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; font: inherit;
+  border-bottom: 3px solid var(--ink-3);
+}
+.rung .lv { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); }
+.rung .nm { font-family: var(--font-display); font-weight: 650; font-size: 1rem; line-height: 1.15; overflow-wrap: anywhere; }
+.rung:hover { border-color: var(--ink-3); }
+.rung[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.rung[aria-pressed="true"] .lv { color: var(--paper-2); }
+.rung.r1 { height: 90px; } .rung.r2 { height: 122px; } .rung.r3 { height: 154px; }
+.rung.r4 { height: 186px; } .rung.r5 { height: 218px; } .rung.r6 { height: 250px; }
+.rung.closing { background-image: repeating-linear-gradient(135deg, transparent 0 7px, var(--mercury-soft) 7px 9px); border-bottom-color: var(--mercury); }
+.rung.design { border-bottom-color: var(--owner); }
+.rung .flag {
+  position: absolute; top: -30px; left: 0; font-family: var(--font-mono); font-size: 11px; white-space: nowrap; padding: 3px 8px; border-radius: 4px;
+}
+.rung.design .flag { background: var(--owner); color: var(--paper); }
+.rung.closing .flag { background: var(--mercury); color: var(--paper); }
+.ladder-base { height: 2px; background: var(--ink); }
+.ladder-detail { margin-top: 18px; padding: clamp(18px, 3vw, 28px); display: grid; gap: 14px; }
+.ladder-detail h3 { font-size: var(--step-2); }
+.ladder-detail .two { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 0; border-top: 1px solid var(--rule); }
+.ladder-detail .two > div { padding: 14px 18px 0 0; display: grid; gap: 6px; align-content: start; }
+.ladder-detail .two > div + div { padding-left: 18px; border-left: 1px solid var(--rule); }
+.ladder-detail h4 { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3); font-weight: 400; }
+.ladder-detail p { font-size: 0.97rem; line-height: 1.55; }
+.status-tag { font-family: var(--font-mono); font-size: 12px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--rule); }
+.status-tag.done { border-color: var(--go); color: var(--go); }
+.status-tag.prog { border-color: var(--mercury); color: var(--mercury); }
+.status-tag.goal { border-color: var(--owner); color: var(--owner); }
+.status-tag.not { color: var(--ink-3); }
+@media (max-width: 700px) {
+  .ladder { grid-template-columns: minmax(0, 1fr); align-items: stretch; padding-top: 0; gap: 6px; }
+  .rung { height: auto !important; border-radius: 8px; flex-direction: row; align-items: baseline; gap: 10px; border-bottom-width: 1px; border-left: 4px solid var(--ink-3); }
+  .rung.r2 { margin-left: 8%; } .rung.r3 { margin-left: 16%; } .rung.r4 { margin-left: 24%; } .rung.r5 { margin-left: 32%; } .rung.r6 { margin-left: 40%; }
+  .rung.closing { border-left-color: var(--mercury); }
+  .rung.design { border-left-color: var(--owner); }
+  .rung .flag { position: static; margin-left: auto; }
+  .ladder-base { display: none; }
+  .ladder { display: flex; flex-direction: column-reverse; }
+  .ladder-detail .two { grid-template-columns: minmax(0,1fr); }
+  .ladder-detail .two > div + div { padding-left: 0; border-left: 0; border-top: 1px solid var(--rule); margin-top: 14px; }
+}
+
+/* Self-improvement */
+.open-list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--rule); counter-reset: open; }
+.open-list li { padding: 14px 18px 14px 34px; border-bottom: 1px solid var(--rule); position: relative; font-size: 0.95rem; line-height: 1.5; counter-increment: open; }
+.open-list li::before { content: counter(open); position: absolute; left: 0; top: 14px; font-family: var(--font-mono); font-size: 12px; color: var(--stop); border: 1px solid var(--stop); border-radius: 50%; width: 22px; height: 22px; display: grid; place-items: center; }
+.open-list li strong { font-family: var(--font-display); font-weight: 650; }
+@media (max-width: 760px) { .open-list { grid-template-columns: minmax(0, 1fr); } }
+
+/* Sharing */
+.knobs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.knob { padding: 18px; display: grid; gap: 10px; align-content: start; }
+.knob .key { font-family: var(--font-mono); font-size: 12px; color: var(--mercury); }
+.knob h3 { font-size: 1.15rem; font-weight: 700; }
+.knob p { font-size: 0.93rem; line-height: 1.5; color: var(--ink-2); }
+.knob .viz { height: 56px; display: flex; align-items: flex-end; gap: 6px; }
+.viz .slot { flex: 1; border: 1.5px solid var(--ink); border-radius: 4px; height: 100%; display: grid; place-items: center; font-family: var(--font-mono); font-size: 10px; color: var(--ink-2); }
+.viz .slot.on { background: var(--mercury); border-color: var(--mercury); color: var(--paper); }
+.viz .bar { flex: 1; background: var(--paper-2); border: 1px solid var(--rule); border-radius: 3px 3px 0 0; display: grid; align-items: end; justify-items: center; font-family: var(--font-mono); font-size: 10px; color: var(--ink-2); }
+.viz .meter { width: 100%; display: grid; gap: 6px; font-family: var(--font-mono); font-size: 11px; color: var(--ink-2); }
+.viz .meter div { height: 10px; border-radius: 999px; background: var(--paper-2); border: 1px solid var(--rule); position: relative; overflow: hidden; }
+.viz .meter div::after { content: ""; position: absolute; inset: 0 auto 0 0; width: var(--w); background: var(--ink-2); }
+.viz .meter div.cap::after { background: var(--stop); }
+.not-capped { margin-top: 16px; font-size: 0.95rem; color: var(--ink-2); display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.not-capped .pill { text-decoration: line-through; text-decoration-color: var(--ink-3); }
+@media (max-width: 960px) { .knobs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .knobs { grid-template-columns: minmax(0, 1fr); } }
+pre {
+  margin: 0; font-family: var(--font-mono); font-size: 13px; line-height: 1.55; background: var(--sheet); border: 1px solid var(--rule);
+  border-radius: var(--radius); padding: 16px 18px; overflow-x: auto; color: var(--ink);
+}
+pre .k { color: var(--mercury); }
+pre .c { color: var(--ink-3); }
+
+/* Lenses */
+.lens-flow { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 2fr) minmax(0, 1.3fr); gap: 12px; align-items: stretch; }
+.lens-step { padding: 18px; display: grid; gap: 10px; align-content: start; }
+.lens-step h3 { font-size: 1.1rem; font-weight: 700; }
+.lens-step .k { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+.lens-step ul { margin: 0; padding-left: 1.1em; font-size: 0.93rem; line-height: 1.55; color: var(--ink-2); }
+.lens-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.lens { border: 1px solid var(--rule); border-radius: 8px; padding: 12px; display: grid; gap: 4px; background: var(--paper); }
+.lens b { font-family: var(--font-display); font-size: 1.05rem; display: flex; align-items: center; gap: 8px; }
+.lens .when { font-size: 0.88rem; color: var(--ink-2); line-height: 1.4; }
+.lens .lock { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; border: 1px solid var(--ink); border-radius: 3px; padding: 0 5px; font-weight: 400; }
+.lens .opt { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; border: 1px dashed var(--ink-3); color: var(--ink-3); border-radius: 3px; padding: 0 5px; font-weight: 400; }
+.rule-box { border-left: 3px solid var(--stop); padding-left: 14px; display: grid; gap: 6px; font-size: 0.93rem; line-height: 1.5; }
+.rule-box ol { margin: 0; padding-left: 1.2em; }
+@media (max-width: 900px) { .lens-flow { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 420px) { .lens-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* Roadmap */
+.phases { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.phase { padding: 20px; display: grid; gap: 12px; align-content: start; }
+.phase .k { font-family: var(--font-mono); font-size: 12px; color: var(--mercury); }
+.phase h3 { font-size: var(--step-1); font-weight: 700; }
+.phase p, .phase li { font-size: 0.94rem; line-height: 1.5; color: var(--ink-2); }
+.phase ul { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; }
+.phase .exit { border-top: 1px solid var(--rule); padding-top: 12px; font-size: 0.94rem; }
+.phase .exit b { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--go); display: block; margin-bottom: 4px; font-weight: 400; }
+.phase.now { border-color: var(--mercury); box-shadow: inset 0 3px 0 var(--mercury); }
+@media (max-width: 900px) { .phases { grid-template-columns: minmax(0, 1fr); } }
+
+/* Sources */
+.src { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 40px; }
+.src-group { border-top: 1px solid var(--rule); padding: 16px 0 20px; display: grid; gap: 8px; align-content: start; }
+.src-group h3 { font-size: 1.05rem; font-weight: 700; }
+.src-group ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 0.95rem; }
+.src-group .note { font-size: 0.86rem; color: var(--ink-2); font-style: italic; }
+@media (max-width: 760px) { .src { grid-template-columns: minmax(0, 1fr); } }
+
+footer.site { border-top: 2px solid var(--ink); padding-block: 36px 48px; }
+footer.site .wrap { display: flex; flex-wrap: wrap; gap: 16px 32px; align-items: center; justify-content: space-between; }
+footer.site p { font-size: 0.95rem; color: var(--ink-2); max-width: 52ch; }
+
+/* Reveal: elements below the fold start slightly offset and settle in. Never hidden at rest. */
+.reveal { transition: transform .7s cubic-bezier(.2,.7,.2,1), opacity .7s ease; }
+.reveal.pending { transform: translateY(18px); opacity: 0.4; }
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .reveal.pending { transition: none; transform: none; opacity: 1; }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="top">
+  <div class="wrap">
+    <a class="mark" href="#top" aria-label="Mercurio, back to top"><span class="hg" aria-hidden="true">Hg</span><span>Mercurio</span></a>
+    <nav class="nav" aria-label="Sections">
+      <a href="#problem">Problem</a>
+      <a href="#principles">Principles</a>
+      <a href="#factory">Factory</a>
+      <a href="#human">Human</a>
+      <a href="#maturity">Maturity</a>
+      <a href="#improve">Self-improvement</a>
+      <a href="#sharing">Sharing</a>
+      <a href="#lenses">Review</a>
+      <a href="#roadmap">Roadmap</a>
+      <a href="#sources">Sources</a>
+    </nav>
+    <button class="theme-btn" id="theme-toggle" type="button" aria-label="Switch color theme">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg>
+      <span id="theme-label">Theme</span>
+    </button>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- HERO -->
+<section class="hero" id="top">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <p class="eyebrow"><b>Mercurio</b> a local, multi-project software factory</p>
+      <h1>The intelligence is in the <em>harness</em>, <span class="dim">not the model.</span></h1>
+      <p class="what">Mercurio is one service on the owner's machine. It reads each project's GitHub Project, runs every queued card through a fixed chain of small Claude Code sessions, checks each one with a gate the service runs itself, and shares the machine among every project.</p>
+      <p class="auto-line"><strong>Semi-autonomous by design.</strong> The factory proposes, the owner approves. Only the owner queues work, and every change to the factory or its memory waits for the owner.</p>
+    </div>
+
+    <figure>
+      <div class="scroller min-640">
+        <svg id="hero-line" viewBox="0 0 940 160" role="img" aria-label="A card travels along six stations, each followed by a gate, and ends at a switch that routes the change either to the QA branch or to a person.">
+          <defs>
+            <marker id="hl-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10z" class="arrowhead"/></marker>
+          </defs>
+          <path id="hero-path" d="M50 80 H780 L850 40" class="track" />
+          <path d="M780 80 L850 120" class="track owner-stroke" />
+          <g class="gates">
+            <path d="M120 72 l8 8 -8 8 -8 -8z" class="gate"/>
+            <path d="M260 72 l8 8 -8 8 -8 -8z" class="gate"/>
+            <path d="M400 72 l8 8 -8 8 -8 -8z" class="gate"/>
+            <path d="M540 72 l8 8 -8 8 -8 -8z" class="gate"/>
+            <path d="M680 72 l8 8 -8 8 -8 -8z" class="gate"/>
+          </g>
+          <g>
+            <circle cx="50" cy="80" r="11" class="node"/><circle cx="190" cy="80" r="11" class="node"/>
+            <circle cx="330" cy="80" r="11" class="node"/><circle cx="470" cy="80" r="11" class="node"/>
+            <circle cx="610" cy="80" r="11" class="node"/><circle cx="750" cy="80" r="11" class="node"/>
+            <circle cx="780" cy="80" r="4" fill="currentColor"/>
+          </g>
+          <g text-anchor="middle" class="t-sm">
+            <text x="50" y="114">intake</text><text x="190" y="114">define</text><text x="330" y="114">design</text>
+            <text x="470" y="114">coding</text><text x="610" y="114">verification</text><text x="750" y="114">routing</text>
+          </g>
+          <g text-anchor="middle" class="t-xs ink3">
+            <text x="120" y="60">GATE</text><text x="260" y="60">GATE</text><text x="400" y="60">GATE</text><text x="540" y="60">GATE</text><text x="680" y="60">GATE</text>
+          </g>
+          <circle cx="850" cy="40" r="7" class="node-merc"/>
+          <circle cx="850" cy="120" r="7" class="node-owner"/>
+          <text x="866" y="44" class="t-sm">QA branch</text>
+          <text x="866" y="124" class="t-sm owner-text">person</text>
+          <circle r="6" class="merc-fill" id="hero-token">
+            <animateMotion dur="9s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;0.06;0.9;1" calcMode="linear"><mpath href="#hero-path"/></animateMotion>
+          </circle>
+        </svg>
+      </div>
+      <figcaption>The chain every card runs. Each gate is run by the service, not by the model. At the end a classifier switches the change to the QA branch or to a person.</figcaption>
+    </figure>
+
+    <div class="facts" role="list">
+      <div role="listitem"><b>6</b><span>stations at most per card, each a fresh session</span></div>
+      <div role="listitem"><b>4</b><span>review lenses: code, security, ui, ux</span></div>
+      <div role="listitem"><b>2</b><span>self-improvement loops, kept apart</span></div>
+      <div role="listitem"><b>1</b><span>owner, who alone queues and approves</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<section id="problem">
+  <div class="wrap stack">
+    <div class="sec-head reveal">
+      <p class="eyebrow"><b>01</b> The problem</p>
+      <h2>Agents made writing code cheap. They did not make integrating, reviewing or running it cheap.</h2>
+      <p class="lede">The constraint did not disappear. It moved downstream, to human review and the merge queue. A factory has to be designed around that fact.</p>
+    </div>
+
+    <div class="two-col">
+      <div class="stack reveal">
+        <blockquote class="pull">
+          “The constraint didn't disappear. It moved downstream, to the narrowest pipe in the system.”
+          <footer><a href="https://tianpan.co/blog/2026/07/02/the-merge-queue-is-the-new-bottleneck">Tian Pan, The Merge Queue Is the New Bottleneck</a></footer>
+        </blockquote>
+        <div class="stat-row">
+          <div><b>+2,450%</b><p>lines of code on GitHub, while releases grew 30%. <span class="cite"><a href="https://www.sonarsource.com/resources/library/what-is-an-agentic-software-factory/">NBER WP 35275, via Sonar</a></span></p></div>
+          <div><b>+91%</b><p>longer in review for teams with high AI adoption. <span class="cite"><a href="https://re-cinq.com/topics/spec-driven-development">Faros AI, via re-cinq</a></span></p></div>
+          <div><b>2 / hour</b><p>at most, through a 30-minute merge-group CI, if nothing fails. <span class="cite"><a href="https://tianpan.co/blog/2026/07/02/the-merge-queue-is-the-new-bottleneck">Tian Pan</a></span></p></div>
+        </div>
+        <p class="muted">AI tools raise the volume of pull requests but do not change deployment frequency or lead time <span class="cite"><a href="https://www.augmentcode.com/guides/how-do-enterprise-teams-build-agentic-workflows">Augment Code</a></span>. <span class="infer">Inference</span> Speeding up only the parallel part, writing code, runs into the serial part: review, merge and deployment <span class="cite"><a href="https://www.splunk.com/en_us/blog/learn/amdahls-law.html">Amdahl's law, Splunk</a></span>. The source itself warns that Amdahl does not hold when the load grows, which is exactly what agents do, so the frame orients rather than calculates.</p>
+      </div>
+
+      <div class="stack reveal">
+        <h3 class="subhead">Why one long-running agent fails</h3>
+        <div class="prose">
+          <p>Most products that call themselves AI agents are “mostly deterministic code, with LLM steps sprinkled in at just the right points” <span class="cite"><a href="https://github.com/humanlayer/12-factor-agents/tree/main/content">12-factor-agents</a></span>. Agents get lost as the context grows: “anything more than 10-20 turns becomes a big mess that the LLM can't recover from”. The recommendation is agents of “3-10, maybe 20 steps max” inside a deterministic DAG.</p>
+          <p>Anderson reaches the same place from operations: “AI agent CLIs are reasoning engines, not process managers” <span class="cite"><a href="https://arxiv.org/pdf/2604.09388">Anderson, arXiv 2604.09388</a></span>. And from the review process: “A model that guesses the next step guesses differently tomorrow” <span class="cite"><a href="https://github.com/Gentleman-Programming/gentle-ai">gentle-ai</a></span>.</p>
+        </div>
+      </div>
+    </div>
+
+    <figure class="reveal">
+      <div class="scroller min-760">
+        <svg viewBox="0 0 920 270" role="img" aria-label="Left: one agent in one long loop, carrying more context every turn until past 10 to 20 turns it cannot recover. Right: Mercurio's small sessions, each with a clean context, separated by gates; the service decides each transition.">
+          <defs>
+            <marker id="cmp-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10z" class="arrowhead"/></marker>
+          </defs>
+          <text x="20" y="26" class="t-name">One agent, one long loop</text>
+          <text x="20" y="46" class="t-sm ink3">context carried, turn by turn</text>
+          <g>
+            <rect x="20" y="62" width="42" height="8" rx="2" class="node"/>
+            <rect x="20" y="74" width="64" height="8" rx="2" class="node"/>
+            <rect x="20" y="86" width="86" height="8" rx="2" class="node"/>
+            <rect x="20" y="98" width="108" height="8" rx="2" class="node"/>
+            <rect x="20" y="110" width="130" height="8" rx="2" class="node"/>
+            <rect x="20" y="122" width="152" height="8" rx="2" class="node"/>
+            <rect x="20" y="134" width="174" height="8" rx="2" class="node"/>
+            <rect x="20" y="146" width="196" height="8" rx="2" class="node"/>
+            <rect x="20" y="158" width="218" height="8" rx="2" class="node"/>
+            <rect x="20" y="178" width="240" height="8" rx="2" class="stop-fill" opacity="0.55"/>
+            <rect x="20" y="190" width="262" height="8" rx="2" class="stop-fill" opacity="0.65"/>
+            <rect x="20" y="202" width="284" height="8" rx="2" class="stop-fill" opacity="0.75"/>
+            <rect x="20" y="214" width="306" height="8" rx="2" class="stop-fill" opacity="0.85"/>
+            <rect x="20" y="226" width="328" height="8" rx="2" class="stop-fill"/>
+          </g>
+          <line x1="20" y1="172" x2="410" y2="172" class="line dash"/>
+          <text x="410" y="166" text-anchor="end" class="t-sm">past 10 to 20 turns</text>
+          <text x="410" y="256" text-anchor="end" class="t-sm ink2">“a big mess the LLM can't recover from”</text>
+
+          <line x1="455" y1="20" x2="455" y2="250" class="line" stroke-dasharray="2 6"/>
+
+          <text x="490" y="26" class="t-name">Small sessions, deterministic flow</text>
+          <text x="490" y="46" class="t-sm ink3">each session starts clean and reads only its inputs</text>
+          <g>
+            <rect x="490" y="104" width="78" height="60" rx="8" class="node"/>
+            <rect x="600" y="104" width="78" height="60" rx="8" class="node"/>
+            <rect x="710" y="104" width="78" height="60" rx="8" class="node"/>
+            <rect x="820" y="104" width="78" height="60" rx="8" class="node"/>
+            <rect x="504" y="146" width="22" height="7" rx="2" class="merc-fill"/>
+            <rect x="614" y="146" width="22" height="7" rx="2" class="merc-fill"/>
+            <rect x="724" y="146" width="22" height="7" rx="2" class="merc-fill"/>
+            <rect x="834" y="146" width="22" height="7" rx="2" class="merc-fill"/>
+          </g>
+          <g text-anchor="middle" class="t-sm">
+            <text x="529" y="130">intake</text><text x="639" y="130">define</text><text x="749" y="130">coding</text><text x="859" y="130">verify</text>
+          </g>
+          <g>
+            <path d="M584 126 l8 8 -8 8 -8 -8z" class="gate"/>
+            <path d="M694 126 l8 8 -8 8 -8 -8z" class="gate"/>
+            <path d="M804 126 l8 8 -8 8 -8 -8z" class="gate"/>
+          </g>
+          <g text-anchor="middle" class="t-xs ink3">
+            <text x="584" y="96">GATE</text><text x="694" y="96">GATE</text><text x="804" y="96">GATE</text>
+          </g>
+          <path d="M520 200 H870" class="line" marker-end="url(#cmp-arrow)"/>
+          <text x="694" y="224" text-anchor="middle" class="t-sm">the service decides each transition,</text>
+          <text x="694" y="242" text-anchor="middle" class="t-sm">never the model</text>
+        </svg>
+      </div>
+      <p class="scroll-hint">Scroll sideways to see the whole diagram.</p>
+      <figcaption>Left, the 12-factor warning drawn to scale of turns. Right, Mercurio's answer: one separate session per station, a gate after each, and a service that owns the transitions (ADR 0002).</figcaption>
+    </figure>
+
+    <aside class="callout reveal" aria-label="Where the evidence is thin">
+      <h3>The evidence is mixed, and Mercurio's design takes that seriously</h3>
+      <p>The best-documented case went from 16 to 81 merged PRs a day over 100 days with one maintainer <span class="cite"><a href="https://arxiv.org/pdf/2604.09388">Anderson</a></span>. A controlled experiment measured developers 19% slower with AI while they believed they were faster <span class="cite"><a href="https://ai.engineer/topics/coding-agents">METR, via ai.engineer</a></span>, and across 8.1 million PRs, AI-assisted ones merged within 30 days 32.7% of the time against 84.4% for manual ones <span class="cite"><a href="https://enpitech.dev/frontend-factory">LinearB, via Enpitech</a></span>. <span class="infer">Inference</span> The reading most consistent with every source: the gain exists where gates are strong, work is bounded and tests are deterministic, and it is absent or negative where they are not.</p>
+    </aside>
+  </div>
+</section>
+
+<!-- PRINCIPLES -->
+<section id="principles">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <p class="eyebrow"><b>02</b> The principles</p>
+      <h2>Four ideas, repeated by independent sources, decide the shape of the factory.</h2>
+      <p class="lede">They come from a synthesis of 41 sources read for Mercurio in November 2026. Each card shows the claim, its source, and the decision in Mercurio that follows from it.</p>
+    </div>
+    <div class="principles">
+      <article class="principle reveal">
+        <span class="num">Principle 1</span>
+        <h3>Intelligence lives in the harness</h3>
+        <q>The intelligence of an AI-driven development system resides not in the AI model itself, but in the infrastructure of instructions, tests, metrics, and feedback loops that surround it.</q>
+        <span class="cite"><a href="https://arxiv.org/pdf/2604.09388">Anderson, arXiv 2604.09388</a></span>
+        <p class="muted">The same model produced 72.6% functional and 29.0% secure code in one harness, and 59.8% and 19.0% in another <span class="cite"><a href="https://www.endorlabs.com/learn/decoding-the-agent-stack">Endor Labs</a></span>.</p>
+        <p class="applies"><strong>In Mercurio.</strong> The harness is mounted per session, chosen by project, factory and phase. The service decides every transition; a session's account of its own work is not evidence, the gate runs on the artifact.</p>
+      </article>
+      <article class="principle reveal">
+        <span class="num">Principle 2</span>
+        <h3>Gates must grow faster than generation</h3>
+        <q>Agents optimize to pass the gates, and weak gates turn high volume into unusable output.</q>
+        <span class="cite"><a href="https://www.hackersandwizards.dev/knowledge/software-factories/software-factories-and-harness-engineering/">hackers&amp;wizards</a></span>
+        <p class="muted">If the gates do not catch what the human reviewer caught, “the factory ships what the reviewer used to stop” <span class="cite"><a href="https://weaveintelligence.io/blog/ai-software-factory">Weave</a></span>.</p>
+        <p class="applies"><strong>In Mercurio.</strong> Agents never edit the guards that judge them. Verification runs the QA branch's copy of the checks, so a branch cannot change the checks it is judged by, and a retrospective that touches a gate is refused.</p>
+      </article>
+      <article class="principle reveal">
+        <span class="num">Principle 3</span>
+        <h3>Autonomy in proportion to what can be verified</h3>
+        <q>Only the autonomy you can verify.</q>
+        <span class="cite"><a href="https://www.sonarsource.com/resources/library/what-is-an-agentic-software-factory/">Sonar, quoting Osmani (translated)</a></span>
+        <p class="muted">A loop runs unsupervised only if its verification is cheap, frequent and hard to fool. The more irreversible the action, the stronger the human gate <span class="cite"><a href="https://johnroest.nl/posts/ai-agents-speckit-software-development">Roest</a></span>.</p>
+        <p class="applies"><strong>In Mercurio.</strong> Only documentation and frontend paths may skip the person, never an always-human path. Every fast-lane merge is sampled by the owner until 20 samples exist; the lane stays as wide only while samples find nothing the gates missed.</p>
+      </article>
+      <article class="principle reveal">
+        <span class="num">Principle 4</span>
+        <h3>Maturity is feedback loops, not autonomy</h3>
+        <q>Autonomy is an output of maturity, not a definition of it.</q>
+        <span class="cite"><a href="https://arxiv.org/pdf/2604.09388">Anderson</a></span>
+        <p class="muted">Levels are defined by the topology of feedback loops, and none can be skipped. Each is unlocked by another feedback mechanism.</p>
+        <p class="applies"><strong>In Mercurio.</strong> Every station run is appended to an event log that nothing edits. Before a prompt, a profile or a model changes, recorded cards are run again and their gate results compared.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- FACTORY -->
+<section id="factory">
+  <div class="wrap stack">
+    <div class="sec-head reveal">
+      <p class="eyebrow"><b>03</b> The factory</p>
+      <h2>A chain of stations with gates, and a routed exit.</h2>
+      <p class="lede">Four fixed factories, define, draw, code and test, are the same for every project. Inside them a card runs six stations. Each is a separate Claude Code session with one contract: input artifacts, output artifacts, a gate the service runs, and a named authority. Select a station to see what it does and what happens when it fails.</p>
+    </div>
+
+    <div class="flow-fig reveal">
+      <div class="chips" role="group" aria-label="Stations">
+        <button class="chip" type="button" data-st="intake" aria-pressed="true"><small>define</small>Intake</button>
+        <button class="chip" type="button" data-st="define" aria-pressed="false"><small>define</small>Define</button>
+        <button class="chip" type="button" data-st="design" aria-pressed="false"><small>draw</small>Design</button>
+        <button class="chip" type="button" data-st="coding" aria-pressed="false"><small>code</small>Coding</button>
+        <button class="chip" type="button" data-st="verification" aria-pressed="false"><small>test</small>Verification</button>
+        <button class="chip" type="button" data-st="routing" aria-pressed="false"><small>test</small>Routing</button>
+      </div>
+
+      <figure>
+        <div class="scroller min-760 panel">
+          <svg class="flow-svg" viewBox="0 0 1200 340" role="group" aria-label="Factory flow: intake, define, design, coding, verification and routing, each followed by a gate. Design is skipped when the plan has no UI. Routing switches the change to the QA branch through the fast lane, or to a person.">
+            <defs>
+              <marker id="fl-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10z" class="arrowhead"/></marker>
+            </defs>
+            <rect x="16" y="112" width="336" height="150" rx="12" class="band"/>
+            <rect x="362" y="112" width="160" height="150" rx="12" class="band"/>
+            <rect x="532" y="112" width="160" height="150" rx="12" class="band"/>
+            <rect x="702" y="112" width="306" height="150" rx="12" class="band"/>
+            <g class="t-xs ink3">
+              <text x="28" y="132">DEFINE</text><text x="374" y="132">DRAW</text><text x="544" y="132">CODE</text><text x="714" y="132">TEST</text>
+            </g>
+
+            <g class="line">
+              <path d="M136 205 H146"/><path d="M166 205 H194" marker-end="url(#fl-arrow)"/>
+              <path d="M308 205 H318"/><path d="M338 205 H366" marker-end="url(#fl-arrow)"/>
+              <path d="M480 205 H490"/><path d="M510 205 H538" marker-end="url(#fl-arrow)"/>
+              <path d="M652 205 H662"/><path d="M682 205 H710" marker-end="url(#fl-arrow)"/>
+              <path d="M824 205 H834"/><path d="M854 205 H882" marker-end="url(#fl-arrow)"/>
+            </g>
+            <path d="M328 215 C 330 305, 560 312, 588 243" class="line dash" marker-end="url(#fl-arrow)"/>
+            <text x="452" y="300" text-anchor="middle" class="t-sm ink2">plan says UI: no, skip design</text>
+
+            <g>
+              <path d="M156 195 l10 10 -10 10 -10 -10z" class="gate"/>
+              <path d="M328 195 l10 10 -10 10 -10 -10z" class="gate"/>
+              <path d="M500 195 l10 10 -10 10 -10 -10z" class="gate"/>
+              <path d="M672 195 l10 10 -10 10 -10 -10z" class="gate"/>
+              <path d="M844 195 l10 10 -10 10 -10 -10z" class="gate"/>
+            </g>
+
+            <g class="st" data-st="intake" tabindex="0" role="button" aria-pressed="true" aria-label="Intake">
+              <rect x="24" y="173" width="112" height="64" rx="10" class="node"/>
+              <text x="80" y="200" text-anchor="middle" class="t-name">Intake</text>
+              <text x="80" y="221" text-anchor="middle" class="t-sm">intake.md</text>
+            </g>
+            <g class="st" data-st="define" tabindex="0" role="button" aria-pressed="false" aria-label="Define">
+              <rect x="196" y="173" width="112" height="64" rx="10" class="node"/>
+              <text x="252" y="200" text-anchor="middle" class="t-name">Define</text>
+              <text x="252" y="221" text-anchor="middle" class="t-sm">spec·plan·tasks</text>
+            </g>
+            <g class="st" data-st="design" tabindex="0" role="button" aria-pressed="false" aria-label="Design">
+              <rect x="368" y="173" width="112" height="64" rx="10" class="node"/>
+              <text x="424" y="200" text-anchor="middle" class="t-name">Design</text>
+              <text x="424" y="221" text-anchor="middle" class="t-sm">design.md</text>
+            </g>
+            <g class="st" data-st="coding" tabindex="0" role="button" aria-pressed="false" aria-label="Coding">
+              <rect x="540" y="173" width="112" height="64" rx="10" class="node"/>
+              <text x="596" y="200" text-anchor="middle" class="t-name">Coding</text>
+              <text x="596" y="221" text-anchor="middle" class="t-sm">commit / task</text>
+            </g>
+            <g class="st" data-st="verification" tabindex="0" role="button" aria-pressed="false" aria-label="Verification">
+              <rect x="712" y="173" width="112" height="64" rx="10" class="node"/>
+              <text x="768" y="200" text-anchor="middle" class="t-name">Verification</text>
+              <text x="768" y="221" text-anchor="middle" class="t-sm">findings</text>
+            </g>
+            <g class="st" data-st="routing" tabindex="0" role="button" aria-pressed="false" aria-label="Routing">
+              <rect x="884" y="173" width="112" height="64" rx="10" class="node"/>
+              <text x="940" y="200" text-anchor="middle" class="t-name">Routing</text>
+              <text x="940" y="221" text-anchor="middle" class="t-sm">a lane</text>
+            </g>
+
+            <g class="t-xs owner-text" text-anchor="middle">
+              <text x="80" y="162">OWNER ANSWERS</text>
+              <text x="252" y="162">OWNER IF HIGH RISK</text>
+              <text x="424" y="162">OWNER APPROVES</text>
+            </g>
+
+            <path d="M996 205 H1030" class="track"/>
+            <circle cx="1030" cy="205" r="4" fill="currentColor"/>
+            <path d="M1030 205 L1060 100" class="track merc-stroke" marker-end="url(#fl-arrow)"/>
+            <path d="M1030 205 L1060 310" class="track owner-stroke" marker-end="url(#fl-arrow)"/>
+            <rect x="1062" y="70" width="124" height="60" rx="10" class="node-merc"/>
+            <text x="1124" y="96" text-anchor="middle" class="t-name">QA branch</text>
+            <text x="1124" y="116" text-anchor="middle" class="t-sm">fast lane</text>
+            <rect x="1062" y="280" width="124" height="60" rx="10" class="node-owner"/>
+            <text x="1124" y="306" text-anchor="middle" class="t-name owner-text">Person</text>
+            <text x="1124" y="326" text-anchor="middle" class="t-sm">PR, Slack</text>
+            <g class="t-xs ink3">
+              <text x="16" y="30">EVERY ◇ IS A GATE THE SERVICE RUNS ON THE OUTPUT</text>
+              <text x="16" y="48">A SESSION ENDS: DONE, NEEDS THE OWNER, OR BLOCKED</text>
+            </g>
+          </svg>
+        </div>
+        <p class="scroll-hint">Scroll sideways to see the whole diagram, or use the station buttons above.</p>
+      </figure>
+
+      <div class="panel detail" id="station-detail" aria-live="polite">
+        <div class="detail-head"><h3 id="sd-name">Intake</h3><span class="tag" id="sd-factory">define factory</span></div>
+        <p id="sd-does"></p>
+        <div class="io"><span><b>in</b> <span id="sd-in"></span></span><span><b>out</b> <span id="sd-out"></span></span><span><b>session</b> <span id="sd-session"></span></span></div>
+        <div class="detail-grid">
+          <div><h4>Gate</h4><p id="sd-gate"></p></div>
+          <div class="auth" id="sd-auth-box"><h4>Authority</h4><p id="sd-auth"></p></div>
+          <div class="fail"><h4>When it fails</h4><p id="sd-fail"></p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal">
+      <h3 class="subhead">When a gate fails</h3>
+      <p class="muted" style="max-width: var(--measure); margin-bottom: 14px;">The state of a card is an event log in SQLite that nothing edits. Pausing, resuming after a restart and running a station again are the same operation: start from an event.</p>
+      <div class="retry">
+        <div><span class="k">1. Retry clean</span><p>The card returns to the same station with the reason. The retry is a new session that gets the artifacts and the failure in short form, never the transcript of the attempt before.</p></div>
+        <div><span class="k stop">2. Block</span><p>After the station's retries the card is blocked, with the reason and the way out written on it.</p></div>
+        <div><span class="k own">3. Owner requeues</span><p>Moving a Blocked issue back to Queue runs that station again on a fresh attempt budget. The CLI can widen a task's edit surface or hand the card a missing file first.</p></div>
+        <div><span class="k">4. Back off</span><p>A run that throws waits before the next try: 1 minute, doubling up to 30.</p></div>
+      </div>
+    </div>
+
+    <div class="two-col reveal">
+      <div class="stack">
+        <h3 class="subhead">Tasks are cut to the model that writes them</h3>
+        <p class="muted">The define session cuts tasks to the profile of the model chosen for the card. The smaller the model, the more of the decision arrives already made in the task. A task that fails twice on one profile is queued again on the next one up.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Profile</th><th>Max changed lines</th><th>Max steps</th><th>Task arrives with</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">haiku</td><td>50</td><td>10</td><td>files and test named</td></tr>
+              <tr><td class="mono">sonnet</td><td>150</td><td>20</td><td>surface and check named</td></tr>
+              <tr><td class="mono">opus</td><td>400</td><td>30</td><td>concern and check named</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="muted" style="font-size:0.9rem">These are starting values with no measurement behind them (ADR 0002). Each profile is meant to settle at the largest size where its gate results hold on recorded tasks, weighed against cost per card.</p>
+      </div>
+      <div class="stack">
+        <h3 class="subhead">The routed exit</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Lane</th><th>When</th><th>What happens</th></tr></thead>
+            <tbody>
+              <tr><td>Fast</td><td>Every path is in <code>fastLane</code> and none is in <code>alwaysHuman</code></td><td>Merged into the QA branch</td></tr>
+              <tr><td style="color:var(--owner)">Person</td><td>Any other case, a blocking finding, or an escalation by meaning</td><td>Pull request against QA, approved in Slack</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="muted">Both lanes run the whole verification; the fast lane skips only the person. Four classes are always human: agent and factory configuration, authentication and payments, dependency manifests and lockfiles, and API contracts. A project cannot remove the first.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HUMAN -->
+<section id="human">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <p class="eyebrow"><b>04</b> Where the human enters</p>
+      <h2>The owner is stopped only for a decision. Everything the factory does on its own is checked by something that is not the model.</h2>
+      <p class="lede">Each stop is one structured request with its options, not free text. Slack shows it; the answer is appended to the card's log and the service resumes the station the request names. Only the owner's Slack answers are recorded.</p>
+    </div>
+
+    <div class="lane-legend reveal" aria-hidden="true"><span><i class="lo"></i>Owner decides</span><span><i class="lf"></i>Factory does</span></div>
+    <div class="lanes reveal">
+      <div class="lane-group"><span>Owner</span><span></span><span>Starting work</span></div>
+      <div class="lane-row">
+        <div class="own"><h3>Queues a card</h3><div class="meta"><span class="pill ch">GitHub Project</span><span class="pill always">always</span></div><p>Moving an issue to Queue is the only thing that queues.</p></div>
+        <div class="rail"></div>
+        <div class="fac">Mercurio picks it up, moves it through Working, Waiting on you, Blocked and In review, and comments what matters. Slack approves and returns; it never queues.</div>
+      </div>
+
+      <div class="lane-group"><span></span><span></span><span>Inside a card</span></div>
+      <div class="lane-row">
+        <div class="own"><h3>Answers intake</h3><div class="meta"><span class="pill ch">Slack</span><span class="pill">when information is missing</span></div><p>Only the owner can answer what intake asks, or confirm a rejection.</p></div>
+        <div class="rail"></div>
+        <div class="fac">The card waits at intake, so no analysis starts on an open question.</div>
+      </div>
+      <div class="lane-row">
+        <div class="own"><h3>Approves a high-risk plan</h3><div class="meta"><span class="pill ch">Slack</span><span class="pill">only on high risk</span></div><p>The define package, spec, plan and tasks, named together.</p></div>
+        <div class="rail"></div>
+        <div class="fac">A low-risk package advances with no stop. Risk is computed again on the real diff at routing, and the higher of the two holds.</div>
+      </div>
+      <div class="lane-row">
+        <div class="own"><h3>Approves the design</h3><div class="meta"><span class="pill ch">Slack</span><span class="pill">when the plan touches UI</span></div><p>The UI states and components the change must honour.</p></div>
+        <div class="rail"></div>
+        <div class="fac">The accessibility check and the ui and ux lenses later hold the change to those declared states.</div>
+      </div>
+      <div class="lane-row">
+        <div class="own"><h3>Reviews the person lane</h3><div class="meta"><span class="pill ch">Slack</span><span class="pill">not fast-lane, blocking finding, or escalation</span></div><p>A pull request against the QA branch, with the lenses' findings in it.</p></div>
+        <div class="rail"></div>
+        <div class="fac">Escalation by meaning can only add a person: a schema migration, email, production data, a new dependency, or a spec assumption that is a business decision.</div>
+      </div>
+      <div class="lane-row">
+        <div class="own"><h3>Samples the fast lane</h3><div class="meta"><span class="pill ch">CLI</span><span class="pill">every fast-lane merge, until 20 samples</span></div><p>Marks each sample <code>ok</code> or <code>missed</code>.</p></div>
+        <div class="rail"></div>
+        <div class="fac">Missed samples feed the retrospective. The fraction may drop only after 20 samples.</div>
+      </div>
+      <div class="lane-row">
+        <div class="own"><h3>Unblocks</h3><div class="meta"><span class="pill ch">GitHub Project</span><span class="pill ch">CLI</span><span class="pill">when a card is blocked</span></div><p>Moves the issue back to Queue, or widens a task's edit surface.</p></div>
+        <div class="rail"></div>
+        <div class="fac">A task that fails on the largest model profile is skipped and the owner is told.</div>
+      </div>
+
+      <div class="lane-group"><span></span><span></span><span>Outside any card</span></div>
+      <div class="lane-row">
+        <div class="own"><h3>Merges or closes a retrospective</h3><div class="meta"><span class="pill ch">GitHub PR</span><span class="pill always">always</span></div><p>Factory configuration is always human, so every proposal waits.</p></div>
+        <div class="rail"></div>
+        <div class="fac">The pull request arrives with a replay comparison already attached.</div>
+      </div>
+      <div class="lane-row">
+        <div class="own"><h3>Approves a memory pass</h3><div class="meta"><span class="pill ch">Slack</span><span class="pill ch">CLI</span><span class="pill always">always</span></div><p>Approve or Reject the dream's proposed operations.</p></div>
+        <div class="rail"></div>
+        <div class="fac">Memory reaches every later session, so a fact planted in a transcript would steer all of them. Nothing is written before approval.</div>
+      </div>
+      <div class="lane-row">
+        <div class="own"><h3>Promotes QA to production</h3><div class="meta"><span class="pill">by hand today</span></div><p>The factory ends at the QA branch.</p></div>
+        <div class="rail"></div>
+        <div class="fac">Automating that promotion is a Phase 2 candidate, not something Mercurio does.</div>
+      </div>
+    </div>
+
+    <aside class="callout owner reveal" style="margin-top: 28px;">
+      <h3>The design rule behind the stops</h3>
+      <p>Mercurio's goal is a factory that runs a card with as few owner stops as it safely can (ADR 0004). That is why functional analysis, technical analysis and slicing became one define session: three sessions could each ask the owner, and the owner approved a spec on every card. Now the owner approves a definition only when its plan is high risk.</p>
+    </aside>
+  </div>
+</section>
+
+<!-- MATURITY -->
+<section id="maturity">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <p class="eyebrow"><b>05</b> Maturity</p>
+      <h2>Designed for semi-autonomous. Still closing the adaptive loops.</h2>
+      <p class="lede">Anderson's six levels are defined by the topology of feedback loops, and no level can be skipped <span class="cite"><a href="https://arxiv.org/pdf/2604.09388">Anderson</a></span>. Select a level to see what it means and where Mercurio stands on it.</p>
+    </div>
+
+    <div class="reveal">
+      <div class="ladder" role="group" aria-label="Maturity levels">
+        <button class="rung r1" type="button" data-lv="0" aria-pressed="false"><span class="lv">L1</span><span class="nm">Assisted</span></button>
+        <button class="rung r2" type="button" data-lv="1" aria-pressed="false"><span class="lv">L2</span><span class="nm">Instructed</span></button>
+        <button class="rung r3" type="button" data-lv="2" aria-pressed="false"><span class="lv">L3</span><span class="nm">Measured</span></button>
+        <button class="rung r4 closing" type="button" data-lv="3" aria-pressed="false"><span class="flag">closing</span><span class="lv">L4</span><span class="nm">Adaptive</span></button>
+        <button class="rung r5 design" type="button" data-lv="4" aria-pressed="true"><span class="flag">Mercurio</span><span class="lv">L5</span><span class="nm">Semi-autonomous</span></button>
+        <button class="rung r6" type="button" data-lv="5" aria-pressed="false"><span class="lv">L6</span><span class="nm">Autonomous</span></button>
+      </div>
+      <div class="ladder-base"></div>
+      <div class="panel ladder-detail" aria-live="polite">
+        <div style="display:flex;flex-wrap:wrap;gap:10px 16px;align-items:baseline"><h3 id="ld-name">Semi-autonomous</h3><span class="status-tag" id="ld-status"></span></div>
+        <div class="two">
+          <div><h4>The level, per Anderson</h4><p id="ld-def"></p></div>
+          <div><h4>Mercurio</h4><p id="ld-merc"></p></div>
+        </div>
+      </div>
+    </div>
+
+    <aside class="callout reveal" style="margin-top:24px">
+      <h3>Why say this out loud</h3>
+      <p><span class="infer">Inference</span> If levels cannot be skipped, a factory built with semi-autonomous approvals still has to earn the adaptive level underneath it. Phase 1 of the roadmap exists for that: retro and dream running on real production work, decided and measured. Eledath's levels agree on the prerequisite: “higher levels of automation only amplify the mess” when context, prompts or tools are poor <span class="cite"><a href="https://agentic-ai.readthedocs.io/en/latest/MaturityModels/agentic-engineering-levels/">agentic-ai.readthedocs</a></span>.</p>
+    </aside>
+  </div>
+</section>
+
+<!-- SELF IMPROVEMENT -->
+<section id="improve">
+  <div class="wrap stack">
+    <div class="sec-head reveal">
+      <p class="eyebrow"><b>06</b> How it improves itself</p>
+      <h2>Two loops, kept apart. Neither applies anything without the owner.</h2>
+      <p class="lede">A retrospective changes how the factory works. A dreaming pass changes what the factory remembers. They run on a schedule outside any card, read only recorded runs, and never touch the gates the factory is judged by.</p>
+    </div>
+
+    <figure class="reveal">
+      <div class="scroller min-760 panel">
+        <svg viewBox="0 0 1000 380" role="img" aria-label="Two separate loops. Retrospective: event log, retrospective session, pull request with replay comparison, owner merges, harness changes. Dreaming: station transcripts, dreaming pass, candidate operations, owner approves, Engram memory written through the engram CLI, then read by stations through a fenced proxy that is still being built.">
+          <defs>
+            <marker id="lp-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10z" class="arrowhead"/></marker>
+          </defs>
+          <text x="30" y="34" class="t-name">Retrospective</text>
+          <text x="30" y="52" class="t-sm ink3">mercurio retro · changes how it works</text>
+          <text x="540" y="34" class="t-name">Dreaming</text>
+          <text x="540" y="52" class="t-sm ink3">mercurio dream · changes what it remembers</text>
+
+          <line x1="500" y1="20" x2="500" y2="360" class="line dash"/>
+          <text x="500" y="374" text-anchor="middle" class="t-xs ink3">KEPT SEPARATE</text>
+
+          <!-- Retro loop -->
+          <rect x="40" y="90" width="150" height="56" rx="10" class="node"/>
+          <text x="115" y="114" text-anchor="middle" class="t-name">Event log</text>
+          <text x="115" y="133" text-anchor="middle" class="t-sm ink2">recorded runs</text>
+          <rect x="300" y="90" width="160" height="56" rx="10" class="node"/>
+          <text x="380" y="114" text-anchor="middle" class="t-name">Retro session</text>
+          <text x="380" y="133" text-anchor="middle" class="t-sm ink2">read-only, not author</text>
+          <rect x="300" y="250" width="160" height="56" rx="10" class="node-merc"/>
+          <text x="380" y="274" text-anchor="middle" class="t-name">PR + replay</text>
+          <text x="380" y="293" text-anchor="middle" class="t-sm ink2">comparison attached</text>
+          <rect x="40" y="250" width="150" height="56" rx="10" class="node-owner"/>
+          <text x="115" y="274" text-anchor="middle" class="t-name owner-text">Owner merges</text>
+          <text x="115" y="293" text-anchor="middle" class="t-sm ink2">or closes</text>
+          <path d="M190 118 H296" class="line" marker-end="url(#lp-arrow)"/>
+          <text x="243" y="108" text-anchor="middle" class="t-sm">repeated failures</text>
+          <path d="M380 146 V246" class="line" marker-end="url(#lp-arrow)"/>
+          <text x="390" y="190" class="t-sm">skill, prompt,</text>
+          <text x="390" y="206" class="t-sm">model profile</text>
+          <path d="M300 278 H194" class="line" marker-end="url(#lp-arrow)"/>
+          <text x="247" y="268" text-anchor="middle" class="t-sm">owner sees</text>
+          <path d="M115 250 V150" class="line" marker-end="url(#lp-arrow)"/>
+          <text x="105" y="196" text-anchor="end" class="t-sm">next</text>
+          <text x="105" y="212" text-anchor="end" class="t-sm">runs</text>
+          <rect x="150" y="176" width="140" height="44" rx="6" fill="none" class="line" stroke-dasharray="3 4"/>
+          <line x1="158" y1="198" x2="282" y2="198" class="line" stroke="currentColor"/>
+          <text x="220" y="194" text-anchor="middle" class="t-sm stop-fill" style="fill:var(--stop)">gates, checks,</text>
+          <text x="220" y="212" text-anchor="middle" class="t-sm" style="fill:var(--stop)">routing: never</text>
+
+          <!-- Dream loop -->
+          <rect x="540" y="90" width="160" height="56" rx="10" class="node"/>
+          <text x="620" y="114" text-anchor="middle" class="t-name">Transcripts</text>
+          <text x="620" y="133" text-anchor="middle" class="t-sm ink2">of station runs</text>
+          <rect x="810" y="90" width="160" height="56" rx="10" class="node"/>
+          <text x="890" y="114" text-anchor="middle" class="t-name">Dreaming pass</text>
+          <text x="890" y="133" text-anchor="middle" class="t-sm ink2">snapshot, cost cap</text>
+          <rect x="810" y="250" width="160" height="56" rx="10" class="node-merc"/>
+          <text x="890" y="274" text-anchor="middle" class="t-name">Candidate ops</text>
+          <text x="890" y="293" text-anchor="middle" class="t-sm ink2">save·supersede·conflict</text>
+          <rect x="540" y="250" width="160" height="56" rx="10" class="node-owner"/>
+          <text x="620" y="274" text-anchor="middle" class="t-name owner-text">Owner approves</text>
+          <text x="620" y="293" text-anchor="middle" class="t-sm ink2">Slack or CLI</text>
+          <rect x="642" y="170" width="146" height="50" rx="10" class="node"/>
+          <text x="715" y="192" text-anchor="middle" class="t-name">Engram</text>
+          <text x="715" y="210" text-anchor="middle" class="t-sm ink2">one writer</text>
+          <path d="M700 118 H806" class="line" marker-end="url(#lp-arrow)"/>
+          <text x="753" y="108" text-anchor="middle" class="t-sm">read as data</text>
+          <path d="M890 146 V246" class="line" marker-end="url(#lp-arrow)"/>
+          <text x="900" y="196" class="t-sm">writes a</text>
+          <text x="900" y="212" class="t-sm">candidate</text>
+          <path d="M810 278 H704" class="line" marker-end="url(#lp-arrow)"/>
+          <path d="M650 250 L690 224" class="line" marker-end="url(#lp-arrow)"/>
+          <text x="604" y="236" text-anchor="end" class="t-sm">engram CLI</text>
+          <path d="M680 170 L640 150" class="line dash merc-stroke" marker-end="url(#lp-arrow)"/>
+          <text x="560" y="168" class="t-sm" style="fill:var(--mercury)">fenced read</text>
+          <text x="560" y="184" class="t-sm" style="fill:var(--mercury)">(being built)</text>
+        </svg>
+      </div>
+      <p class="scroll-hint">Scroll sideways to see both loops.</p>
+      <figcaption>The retrospective proposes changes as a pull request and the service replays recorded cards with the change before the owner sees it. The dreaming pass proposes memory operations; a later fact supersedes an earlier one and says what it replaced, and when two runs disagree the conflict is marked, not decided.</figcaption>
+    </figure>
+
+    <div class="two-col reveal">
+      <div class="prose">
+        <h3 class="subhead">Rules that keep the loops honest</h3>
+        <p>The retrospective works from records, not from its own opinion of the code. It looks for a check that fails the same way at one station, tasks climbing to a larger profile, escalations of one kind, and what the fast-lane sample found. It sees only what the event log records, so a failure the log does not capture is never proposed for a fix.</p>
+        <p>The dreaming pass treats a transcript as data to draw facts from, never instructions. A fact carries its date and the run it came from. A credential is named, never copied. The service snapshots memory before the pass, checks afterwards that every transcript in the window was read, and stops the pass at a cost cap.</p>
+        <p>Stations will read memory live through a read-only proxy that pins the project in code and refuses an observation from another project (ADR 0005). The same fence is what later lets learning cross projects without leaking memory between them.</p>
+      </div>
+      <div class="stack">
+        <div>
+          <h3 class="subhead">What has run so far</h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Pass</th><th>Real runs</th><th>Lands as</th></tr></thead>
+              <tbody>
+                <tr><td>Retrospective</td><td>1, on a test store; its PR was merged</td><td>PR against QA with replay comparison</td></tr>
+                <tr><td>Dreaming</td><td>1, on a test store; 4 operations</td><td>Operations applied through the <code>engram</code> CLI after approval</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="muted" style="font-size:0.9rem;margin-top:10px">The production store holds 287 recorded runs, all with transcripts. Neither pass has run on it yet (roadmap, 2026-11-15).</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal">
+      <h3 class="subhead">Where the loop does not close yet</h3>
+      <ol class="open-list">
+        <li><strong>Approved memory reaches no station.</strong> A plain mount does not fence a project, so no station reads Engram until the fenced proxy lands.</li>
+        <li><strong>Nothing measures a dream.</strong> There is no comparison before and after a memory change.</li>
+        <li><strong>The measurement set is stale.</strong> Its runs are all of stations the one define session replaced.</li>
+        <li><strong>Coding cannot be replayed.</strong> Coding prompt and model changes cannot be measured yet.</li>
+        <li><strong>The dream window starves.</strong> A 1 MB bound let the only real pass read 3 of 40 runs.</li>
+        <li><strong>Undo is manual.</strong> The applied steps are listed, but no command runs them back.</li>
+        <li><strong>Both passes run only on demand.</strong> One pass of each was too little to pick a frequency.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- SHARING -->
+<section id="sharing">
+  <div class="wrap stack">
+    <div class="sec-head reveal">
+      <p class="eyebrow"><b>07</b> Sharing the machine</p>
+      <h2>Many projects, one machine, explicit limits.</h2>
+      <p class="lede">Mercurio runs as a user systemd service, so the caps hold whenever the machine is on. Each project brings its own Claude account and credentials; Mercurio measures each and holds back its own sessions.</p>
+    </div>
+
+    <div class="knobs reveal">
+      <div class="panel knob">
+        <span class="key">caps.sessions</span>
+        <h3>Session slots</h3>
+        <div class="viz" aria-hidden="true"><span class="slot on">card</span><span class="slot on">retro</span><span class="slot">free</span></div>
+        <p>Claude sessions at once, across every project and process: cards, retro, dream and replay. It is 1 when not given.</p>
+      </div>
+      <div class="panel knob">
+        <span class="key">weight</span>
+        <h3>Who goes first</h3>
+        <div class="viz" aria-hidden="true"><span class="bar" style="height:100%">2</span><span class="bar" style="height:66%">1</span><span class="bar" style="height:34%">0</span></div>
+        <p>When cards wait for a slot, a fixed non-negative weight per project decides, higher first, then each project's oldest card. It is 0 when not given.</p>
+      </div>
+      <div class="panel knob">
+        <span class="key">budget</span>
+        <h3>USD per month, per day</h3>
+        <div class="viz" aria-hidden="true"><div class="meter">month<div style="--w:62%"></div>day<div class="cap" style="--w:100%"></div></div></div>
+        <p>API-equivalent USD. Once a project's priced runs this UTC month, or day, reach it, no new session starts until it turns. The daily figure is optional.</p>
+      </div>
+      <div class="panel knob">
+        <span class="key">limits</span>
+        <h3>CPU and RAM per command</h3>
+        <div class="viz" aria-hidden="true"><div class="meter">memoryMax<div style="--w:45%"></div>cpuQuota<div style="--w:70%"></div></div></div>
+        <p>Each test and check runs under <code>systemd-run --user --scope</code> with systemd's own syntax. Without <code>systemd-run</code> it does not run at all.</p>
+      </div>
+    </div>
+    <p class="not-capped reveal">Not capped yet: <span class="pill">disk</span><span class="pill">ports</span><span class="pill">database names</span> <span>Claude sessions themselves sit outside the CPU and RAM caps. The meters above are illustrations, not measurements.</span></p>
+
+    <div class="two-col reveal">
+      <div class="prose">
+        <h3 class="subhead">Updating without stopping work in the middle</h3>
+        <p>Every project runs the latest Mercurio, so a new version applies only when nothing is running. When Mercurio's own checkout moves to a new commit, the service drains: it starts no new card, lets the running ones finish, waits until no Claude session of any process runs, and exits so the unit restarts it on the new commit.</p>
+        <p>Two cards run at once only when their edit surfaces do not overlap.</p>
+      </div>
+      <figure>
+        <pre aria-label="Example manifest fields"><span class="c">// mercurio.json (per project)</span>
+{
+  <span class="k">"weight"</span>: &lt;n&gt;,
+  <span class="k">"budget"</span>: { <span class="k">"usdPerMonth"</span>: &lt;usd&gt;, <span class="k">"usdPerDay"</span>: &lt;usd&gt; },
+  <span class="k">"limits"</span>: { <span class="k">"memoryMax"</span>: "2G", <span class="k">"cpuQuota"</span>: "200%" },
+  <span class="k">"lenses"</span>: ["code", "security", "ui", "ux"]
+}
+<span class="c">// projects.json (machine)</span>
+{ <span class="k">"caps"</span>: { <span class="k">"sessions"</span>: &lt;n&gt; } }</pre>
+        <figcaption>The fields as the README documents them. Placeholders stay placeholders.</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- LENSES -->
+<section id="lenses">
+  <div class="wrap stack">
+    <div class="sec-head reveal">
+      <p class="eyebrow"><b>08</b> Review</p>
+      <h2>A mechanical layer first, then four lenses. The verifier is never the author.</h2>
+      <p class="lede">Verification runs on the frozen commit. The verifier for the lenses is the strongest model that did not write any of the card's tasks. When no model is free, the card goes to a person; it is never blocked for that.</p>
+    </div>
+
+    <div class="lens-flow reveal">
+      <div class="panel lens-step">
+        <span class="k">Layer 1, always first</span>
+        <h3>Mechanical</h3>
+        <ul>
+          <li>Tests on base and on the candidate</li>
+          <li>Types, lint, secret and dependency scans</li>
+          <li>Accessibility and declared UI states, when the change touches UI</li>
+        </ul>
+        <p class="muted" style="font-size:0.9rem">No lens starts on a candidate that fails it.</p>
+      </div>
+      <div class="panel lens-step">
+        <span class="k">Layer 2, read-only, not the author model</span>
+        <h3>Lenses</h3>
+        <div class="lens-grid">
+          <div class="lens"><b>code <span class="lock">required</span></b><span class="when">Always runs.</span></div>
+          <div class="lens"><b>security <span class="lock">required</span></b><span class="when">Runs when the change touches an always-human path.</span></div>
+          <div class="lens"><b>ui <span class="opt">optional</span></b><span class="when">Runs when the plan says UI and the card has its design.</span></div>
+          <div class="lens"><b>ux <span class="opt">optional</span></b><span class="when">Same condition as ui.</span></div>
+        </div>
+        <p class="muted" style="font-size:0.9rem">A project may leave out ui or ux. It can never leave out code or security.</p>
+      </div>
+      <div class="panel lens-step">
+        <span class="k">What blocks</span>
+        <h3>Only the candidate's severe findings</h3>
+        <div class="rule-box">
+          <p>A finding blocks only when all three hold:</p>
+          <ol><li>it is a <code>blocker</code></li><li>the candidate caused it</li><li>its file is in the diff</li></ol>
+        </div>
+        <p class="muted" style="font-size:0.9rem">One bounded correction round follows. If it does not close the finding, the change goes to a person, with every finding in the pull request.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ROADMAP -->
+<section id="roadmap">
+  <div class="wrap stack">
+    <div class="sec-head reveal">
+      <p class="eyebrow"><b>09</b> Roadmap</p>
+      <h2>Grow in steps. A phase starts only when the one before meets its exit criteria.</h2>
+      <p class="lede">The implementation plan's main line and side track are done: the event log, the stations, routing, lenses, cost per card, both self-improvement passes, Slack, the GitHub board, the web page, resource arbitration and the design station. Each phase below states what it proves, not only what it builds.</p>
+    </div>
+
+    <div class="phases reveal">
+      <article class="panel phase now">
+        <span class="k">Phase 1 · now</span>
+        <h3>The self-improvement loop works on production</h3>
+        <ul>
+          <li>Refresh the measurement set from production runs</li>
+          <li>Run the retrospective and the dreaming pass on the production store</li>
+          <li>Let the dream window cover the backlog</li>
+          <li>Stations read memory live through the fenced proxy</li>
+          <li>Measure a dream: replay with and without the approved memory</li>
+          <li>Undo an applied dreaming pass with one command</li>
+          <li>Three cycles of each, then pick a frequency and schedule both</li>
+        </ul>
+        <p class="exit"><b>Exit</b>Three cycles of each pass on production, each one decided and measured, running on a schedule.</p>
+      </article>
+      <article class="panel phase">
+        <span class="k">Phase 2</span>
+        <h3>Pick the next work</h3>
+        <p>Candidates the repository already points at, each needing evidence and a cost estimate before it is queued:</p>
+        <ul>
+          <li>Coding replay, the largest gap in the retro loop</li>
+          <li>QA to production promotion, by hand today</li>
+          <li>Notifiers, terminal backends and board adapters beyond the first</li>
+          <li>A second project on the factory</li>
+          <li>Model comparison beyond retro replays</li>
+        </ul>
+        <p class="exit"><b>Exit</b>A backlog ranked by expected value over cost, each item queued as a card with its evidence.</p>
+      </article>
+      <article class="panel phase">
+        <span class="k">Phase 3</span>
+        <h3>Scale out</h3>
+        <ul>
+          <li>Onboard a second, external project end to end</li>
+          <li>Finish the caps for several projects: disk, ports and database names</li>
+          <li>Let the self-improvement loop learn across projects without leaking memory between them</li>
+        </ul>
+        <p class="exit"><b>Exit</b>Two projects run in parallel for a week with no manual intervention beyond queueing and approvals.</p>
+      </article>
+    </div>
+    <p class="muted reveal" style="max-width:var(--measure)">Still out of scope: running in the cloud, triggering work from anywhere, and a knowledge graph, until a phase above gives a reason to reopen them.</p>
+  </div>
+</section>
+
+<!-- SOURCES -->
+<section id="sources">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <p class="eyebrow"><b>10</b> Sources</p>
+      <h2>The research behind the factory.</h2>
+      <p class="lede">The theory synthesises 41 sources read in November 2026. Most were read through a summarising model, so quoted figures should be checked against the original before being reused. Many are vendors or consultancies; the sources with their own measured data are few.</p>
+    </div>
+    <div class="src reveal">
+      <div class="src-group">
+        <h3>What a factory is</h3>
+        <ul>
+          <li><a href="https://weaveintelligence.io/blog/ai-software-factory">Weave</a></li>
+          <li><a href="https://www.sonarsource.com/resources/library/what-is-an-agentic-software-factory/">Sonar</a></li>
+          <li><a href="https://mastra.ai/articles/what-is-ai-software-factory">Mastra</a></li>
+          <li><a href="https://www.hackersandwizards.dev/knowledge/software-factories/software-factories-and-harness-engineering/">hackers&amp;wizards</a></li>
+          <li><a href="https://www.augmentcode.com/guides/how-do-enterprise-teams-build-agentic-workflows">Augment Code</a></li>
+          <li><a href="https://enpitech.dev/frontend-factory">Enpitech</a></li>
+          <li><a href="https://ai.engineer/topics/coding-agents">ai.engineer</a></li>
+        </ul>
+        <p class="note">Dark versus light factory: resolved by verifiability (Sonar quoting Osmani, Weave).</p>
+      </div>
+      <div class="src-group">
+        <h3>Harness and control</h3>
+        <ul>
+          <li><a href="https://orq.ai/blog/what-is-an-agent-harness">orq.ai</a></li>
+          <li><a href="https://www.endorlabs.com/learn/decoding-the-agent-stack">Endor Labs</a></li>
+          <li><a href="https://github.com/humanlayer/12-factor-agents/tree/main/content">12-factor-agents</a></li>
+          <li><a href="https://github.com/Gentleman-Programming/gentle-ai">gentle-ai</a></li>
+          <li><a href="https://github.com/Gentleman-Programming/gentle-ai/tree/main/docs/architecture">gentle-ai architecture</a></li>
+          <li><a href="https://agentic-ai.readthedocs.io/en/latest/MaturityModels/agentic-engineering-levels/">agentic-ai.readthedocs</a></li>
+        </ul>
+        <p class="note">Endor qualifies: the harness “can shape outcomes, not that it always wins”.</p>
+      </div>
+      <div class="src-group">
+        <h3>Specification</h3>
+        <ul>
+          <li><a href="https://sph.sh/en/posts/github-speckit-ai-specification-framework/">sph.sh</a></li>
+          <li><a href="https://johnroest.nl/posts/ai-agents-speckit-software-development">Roest</a></li>
+          <li><a href="https://github.com/cyberpunk042/devops-solutions-information-hub/blob/main/wiki/sources/src-github-spec-kit-specification-driven-development.md">Spec Kit wiki (cyberpunk042)</a></li>
+          <li><a href="https://re-cinq.com/topics/spec-driven-development">re-cinq</a></li>
+          <li><a href="https://github.github.com/spec-kit/">Spec Kit</a></li>
+          <li><a href="https://speckit.org/">speckit.org</a></li>
+          <li><a href="https://codelabs.developers.google.com/sdd-adk-antigravity">Google codelab</a></li>
+          <li><a href="https://mcpmarket.com/tools/skills/spec-kit-task-generator-1">Spec Kit Task Generator</a></li>
+        </ul>
+        <p class="note">How much spec: all agree, proportional to risk; the evidence of benefit is one small pilot.</p>
+      </div>
+      <div class="src-group">
+        <h3>Maturity and feedback</h3>
+        <ul>
+          <li><a href="https://arxiv.org/pdf/2604.09388">Anderson, arXiv 2604.09388</a></li>
+          <li><a href="https://agentic-ai.readthedocs.io/en/latest/MaturityModels/agentic-engineering-levels/">agentic-ai.readthedocs (Eledath)</a></li>
+          <li><a href="https://weaveintelligence.io/blog/ai-software-factory">Weave</a></li>
+        </ul>
+        <p class="note">Anderson against models that define maturity by autonomy: Anderson has data.</p>
+      </div>
+      <div class="src-group">
+        <h3>Constraint and integration</h3>
+        <ul>
+          <li><a href="https://tianpan.co/blog/2026/07/02/the-merge-queue-is-the-new-bottleneck">Tian Pan</a></li>
+          <li><a href="https://arxiv.org/html/2508.08342v1">BMW, arXiv 2508.08342</a></li>
+          <li><a href="https://www.splunk.com/en_us/blog/learn/amdahls-law.html">Splunk, Amdahl's law</a></li>
+        </ul>
+        <p class="note">Prioritisation gives about 7%, modest next to what batching promises.</p>
+      </div>
+      <div class="src-group">
+        <h3>Telemetry</h3>
+        <ul>
+          <li><a href="https://opentelemetry.io/docs/specs/semconv/registry/attributes/cicd/">OTel CI/CD attributes</a></li>
+          <li><a href="https://opentelemetry.io/docs/specs/semconv/cicd/cicd-metrics/">OTel CI/CD metrics</a></li>
+          <li><a href="https://oneuptime.com/blog/post/2026-02-06-instrument-github-actions-opentelemetry/view">OneUptime</a></li>
+          <li><a href="https://newrelic.com/blog/observability/how-to-observe-your-cicd-pipelines-with-opentelemetry">New Relic</a></li>
+          <li><a href="https://goreleaser.com/customization/telemetry/">GoReleaser</a></li>
+          <li><a href="https://clickhouse.com/docs">ClickHouse</a></li>
+          <li><a href="https://docs.datadoghq.com/integrations/clickhouse-cloud/">Datadog</a></li>
+        </ul>
+        <p class="note">New Relic (2023) predates the current conventions.</p>
+      </div>
+      <div class="src-group">
+        <h3>Flaky tests</h3>
+        <ul>
+          <li><a href="https://www.atlassian.com/blog/how-we-build/taming-test-flakiness-how-we-built-a-scalable-tool-to-detect-and-manage-flaky-tests">Atlassian</a></li>
+          <li><a href="https://github.com/tailrocks/parallax/blob/main/docs/research/capture/ci-and-flaky-tests.md">Parallax</a></li>
+          <li><a href="https://testdino.com/blog/flaky-test-detection-tools">TestDino</a></li>
+          <li><a href="https://www.digia.tech/post/flaky-tests-engineering-velocity/">Digia</a></li>
+          <li><a href="https://en.wikipedia.org/wiki/Flaky_test">Wikipedia</a></li>
+        </ul>
+        <p class="note">Automatic retry as a feature versus as a detector: the evidence (Atlassian) supports detection plus quarantine.</p>
+      </div>
+      <div class="src-group">
+        <h3>DevOps and deployment</h3>
+        <ul>
+          <li><a href="https://fusionhit.com/services/devops/devops-automation/">FusionHit</a></li>
+          <li><a href="https://github.com/humanlayer/12-factor-agents/tree/main/content">12-factor-agents</a></li>
+        </ul>
+        <p class="note">No disagreements; FusionHit is marketing without cases.</p>
+      </div>
+      <div class="src-group">
+        <h3>Working factories Mercurio read</h3>
+        <ul>
+          <li><a href="https://github.com/zazencodes/zazencodes-season-3">zazencodes software factory v2</a></li>
+          <li><a href="https://github.com/humanlayer/12-factor-agents">12-factor-agents</a></li>
+          <li><a href="https://platform.claude.com/cookbook/managed-agents-cma-dreaming-with-a-dynamic-workflow">Anthropic cookbook, dreaming</a></li>
+          <li>A talk on Warp's factories, read as a summary</li>
+        </ul>
+        <p class="note">ADR 0002 lists what was taken from each and what was not, such as applying memory changes without review.</p>
+      </div>
+      <div class="src-group">
+        <h3>Not used</h3>
+        <p class="note" style="font-style:normal">Two Medium articles answered HTTP 403 on every attempt and one GitHub reference returned 404. None of them is used.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <a class="mark" href="https://github.com/sebastianIncarbone"><span class="hg" aria-hidden="true">Hg</span><span>Sebastián Incarbone</span></a>
+    <p>Mercurio is designed and built by Sebastián Incarbone. Its repository is private; this page describes it from its own decision records, roadmap and research. <a href="https://github.com/sebastianIncarbone">More on GitHub</a>.</p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+  var root = document.documentElement;
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* Theme */
+  var btn = document.getElementById("theme-toggle");
+  var label = document.getElementById("theme-label");
+  function systemDark() { return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches; }
+  function current() { return root.getAttribute("data-theme") || (systemDark() ? "dark" : "light"); }
+  function paint() { var t = current(); label.textContent = t === "dark" ? "Dark" : "Light"; btn.setAttribute("aria-label", "Switch to " + (t === "dark" ? "light" : "dark") + " theme"); }
+  try { var saved = localStorage.getItem("mercurio-theme"); if (saved === "dark" || saved === "light") root.setAttribute("data-theme", saved); } catch (e) {}
+  paint();
+  btn.addEventListener("click", function () {
+    var next = current() === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("mercurio-theme", next); } catch (e) {}
+    paint();
+  });
+  if (window.matchMedia) { try { window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", paint); } catch (e) {} }
+
+  /* Hero token: stop under reduced motion */
+  if (reduce) { var tok = document.getElementById("hero-token"); if (tok) tok.parentNode.removeChild(tok); }
+
+  /* Stations */
+  var S = {
+    intake: {
+      name: "Intake", factory: "define factory",
+      does: "Before any analysis, intake decides whether the card can be built as written, states its scope, and asks the owner what only the owner can answer. The card's text reaches every session as quoted data in a file, never as part of a prompt, and the intake session, which reads it first, has no shell.",
+      inp: "the card, as quoted data", out: "intake.md", session: "read-only, no shell",
+      gate: "A verdict: accept, needs information, or reject.",
+      auth: "The owner answers a question or confirms a rejection, in Slack.", owner: true,
+      fail: "A card that needs information waits here, so the analysis never starts on a question. A failed gate runs the station again in a fresh session with the reason; after its retries the card is blocked with the reason and the way out."
+    },
+    define: {
+      name: "Define", factory: "define factory",
+      does: "One session reads intake.md and writes spec.md, plan.md and tasks.md, in that order. The spec holds what and why, acceptance criteria with how each is verified, what must keep working, and open points marked instead of guessed. The plan holds how, the surfaces touched and the risk class. Tasks are cut to the profile of the model that will write them.",
+      inp: "intake.md", out: "spec.md, plan.md, tasks.md", session: "opus, 2 retries",
+      gate: "spec-structure, plan-schema, spec-plan-consistency and tasks-schema, run by the service at the end of the session. Every output opens with a summary and closes with an ending.",
+      auth: "The owner approves the package only when the plan is high risk. A low-risk package advances with no stop.", owner: true,
+      fail: "A failed check in any of the three artifacts retries the whole session with failure.md, never the transcript of the attempt before. When the session must ask the owner, the spec says so and the plan and tasks are left out."
+    },
+    design: {
+      name: "Design", factory: "draw factory",
+      does: "Runs only when the plan's UI section says yes; otherwise the card goes from define straight to coding. A read-only session with no shell reads the spec and the plan and declares the UI states and the components the change must have.",
+      inp: "spec.md, plan.md", out: "design.md (States, Components)", session: "sonnet, 2 retries, read-only",
+      gate: "design-schema: States and Components, each a non-empty list. The repository must be unchanged after the session.",
+      auth: "The owner approves the design.", owner: true,
+      fail: "Retries in a fresh session with the reason, then blocks. Known limit: design runs after tasks.md is written, so a design that needs other files must say so as a question to the owner."
+    },
+    coding: {
+      name: "Coding", factory: "code factory",
+      does: "Takes one task at a time from the task ledger. A task has one concern, the command that proves it done, its edit surface, its dependencies and a model profile. The manager hands out the next task whose dependencies are done, one per card. One commit per task.",
+      inp: "the task and its edit surface, assembled by the service", out: "one commit per task", session: "the task's model profile",
+      gate: "The task's check, and the tests run on base and on the candidate. The service checks the diff against the task's edit surface.",
+      auth: "The service.", owner: false,
+      fail: "A hook limits writes to the edit surface, and the diff is checked afterwards because a hook can fail open. A test that existed before the task and fails is never edited: the session stops and reports. A task that fails twice is queued again on the next profile up; one that fails on the largest is skipped and the owner is told."
+    },
+    verification: {
+      name: "Verification", factory: "test factory",
+      does: "Two layers on the frozen commit. The mechanical layer runs first: tests on base and candidate, types, lint, secret and dependency scans, and accessibility with the declared UI states when the change touches UI. Then read-only review lenses on a model that did not write the change.",
+      inp: "spec.md, plan.md, the diff", out: "findings per lens", session: "strongest model that is not an author",
+      gate: "Frozen candidate. The service runs the QA branch's copy of the checks, not the candidate's, so a branch cannot change the checks it is judged by.",
+      auth: "The service.", owner: false,
+      fail: "No lens starts on a candidate that fails the mechanical layer. A blocking finding gets one bounded correction round; if that does not close it, the change goes to a person with the findings in the pull request. It is never blocked for that."
+    },
+    routing: {
+      name: "Routing", factory: "test factory",
+      does: "A classifier, a pure function of the paths in the diff and the project's manifest, picks a lane. Then a read-only session that is not the author model reads spec, plan and diff, and escalates by meaning: a schema migration, sent email, production data, a dependency outside the named manifests, or a spec assumption that is a business decision.",
+      inp: "the diff, the manifest's routing rules", out: "a lane: fast or person", session: "pure function, then a read-only escalation session",
+      gate: "Classification of the paths changed. A path nobody classified goes to a person.",
+      auth: "The service. Escalation can only send a change to a person; it never moves one into the fast lane.", owner: false,
+      fail: "Before any merge the candidate is brought up to date with the QA branch and the mechanical layer runs again, because another card may have merged since. The fast lane merges into QA; the person lane opens a pull request against QA, approved in Slack."
+    }
+  };
+  var order = ["intake", "define", "design", "coding", "verification", "routing"];
+  function $(id) { return document.getElementById(id); }
+  var chips = Array.prototype.slice.call(document.querySelectorAll(".chip[data-st]"));
+  var nodes = Array.prototype.slice.call(document.querySelectorAll(".flow-svg .st"));
+  function selectStation(key) {
+    var s = S[key]; if (!s) return;
+    $("sd-name").textContent = s.name; $("sd-factory").textContent = s.factory;
+    $("sd-does").textContent = s.does; $("sd-in").textContent = s.inp; $("sd-out").textContent = s.out; $("sd-session").textContent = s.session;
+    $("sd-gate").textContent = s.gate; $("sd-auth").textContent = s.auth; $("sd-fail").textContent = s.fail;
+    $("sd-auth-box").classList.toggle("is-owner", !!s.owner);
+    chips.forEach(function (c) { c.setAttribute("aria-pressed", c.getAttribute("data-st") === key ? "true" : "false"); });
+    nodes.forEach(function (n) { n.setAttribute("aria-pressed", n.getAttribute("data-st") === key ? "true" : "false"); });
+  }
+  chips.forEach(function (c, i) {
+    c.addEventListener("click", function () { selectStation(c.getAttribute("data-st")); });
+    c.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+        e.preventDefault();
+        var j = (i + (e.key === "ArrowRight" ? 1 : -1) + chips.length) % chips.length;
+        chips[j].focus(); selectStation(chips[j].getAttribute("data-st"));
+      }
+    });
+  });
+  nodes.forEach(function (n) {
+    n.addEventListener("click", function () { selectStation(n.getAttribute("data-st")); });
+    n.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selectStation(n.getAttribute("data-st")); }
+    });
+  });
+  selectStation(order[0]);
+
+  /* Maturity ladder */
+  var L = [
+    { name: "Assisted", def: "An open loop. The model suggests; nothing feeds its results back.", merc: "Past this level: every station's output is checked by a gate, and the result is fed back to the next attempt.", st: "Beyond", cls: "done" },
+    { name: "Instructed", def: "Rule files in the repository make the AI consistent.", merc: "The harness lives in Mercurio's repository as plugins and changes by pull request. Each project keeps its product rules and skills in its own .claude/, and a manifest picks the skills each phase loads.", st: "In place", cls: "done" },
+    { name: "Measured", def: "PR acceptance rate, coverage gating, nightly suites. In Anderson's words, tests are what made the AI trustworthy.", merc: "Every run is recorded: hashes of input and output, model, harness version, each check's result, who approved, and tokens. Cost per card is priced per model. Tests run on base and on the candidate.", st: "In place", cls: "done" },
+    { name: "Adaptive", def: "Loops that close on their own: the system adjusts from what it measures.", merc: "The retrospective and the dreaming pass exist and ran once each on a test store. They have not yet run on production, approved memory reaches no station, and nothing measures a dream. Phase 1 of the roadmap closes this.", st: "Closing now", cls: "prog" },
+    { name: "Semi-autonomous", def: "The system proposes, humans approve.", merc: "This is how Mercurio is designed. A retrospective is a pull request the owner merges, a memory pass is a candidate the owner approves, a high-risk plan waits for the owner, and the person lane waits for the owner in Slack.", st: "By design", cls: "goal" },
+    { name: "Autonomous", def: "Agents merge and revert; the human is the strategist. Anderson's entry criteria include always-human risk paths, a production signal, a runbook and a rollback drill.", merc: "Not where Mercurio is. The fast lane merges into the QA branch without a person, but only for classified paths, every merge is sampled until 20 samples exist, and promotion to production is done by hand.", st: "Not claimed", cls: "not" }
+  ];
+  var rungs = Array.prototype.slice.call(document.querySelectorAll(".rung"));
+  function selectLevel(i) {
+    var l = L[i];
+    $("ld-name").textContent = "L" + (i + 1) + " " + l.name;
+    $("ld-def").textContent = l.def; $("ld-merc").textContent = l.merc;
+    var tag = $("ld-status"); tag.textContent = l.st; tag.className = "status-tag " + l.cls;
+    rungs.forEach(function (r) { r.setAttribute("aria-pressed", r.getAttribute("data-lv") === String(i) ? "true" : "false"); });
+  }
+  rungs.forEach(function (r, i) {
+    r.addEventListener("click", function () { selectLevel(+r.getAttribute("data-lv")); });
+    r.addEventListener("keydown", function (e) {
+      var k = e.key; if (k !== "ArrowRight" && k !== "ArrowLeft" && k !== "ArrowUp" && k !== "ArrowDown") return;
+      e.preventDefault();
+      var dir = (k === "ArrowRight" || k === "ArrowUp") ? 1 : -1;
+      var j = Math.max(0, Math.min(rungs.length - 1, i + dir));
+      rungs[j].focus(); selectLevel(j);
+    });
+  });
+  selectLevel(4);
+
+  /* Nav: mark the section in view */
+  var links = Array.prototype.slice.call(document.querySelectorAll(".nav a"));
+  if ("IntersectionObserver" in window) {
+    var secObs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        links.forEach(function (a) { a.setAttribute("aria-current", a.getAttribute("href") === "#" + en.target.id ? "true" : "false"); });
+      });
+    }, { rootMargin: "-45% 0px -50% 0px" });
+    links.forEach(function (a) { var t = document.querySelector(a.getAttribute("href")); if (t) secObs.observe(t); });
+  }
+
+  /* Reveal: only for blocks below the first screen, and never under reduced motion */
+  if (!reduce && "IntersectionObserver" in window) {
+    var els = Array.prototype.slice.call(document.querySelectorAll(".reveal"));
+    var vh = window.innerHeight || 800;
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.remove("pending"); obs.unobserve(en.target); } });
+    }, { rootMargin: "0px 0px -8% 0px" });
+    els.forEach(function (el) {
+      if (el.getBoundingClientRect().top > vh) { el.classList.add("pending"); obs.observe(el); }
+    });
+  }
+})();
+</script>
+</body>
+</html>
